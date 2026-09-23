@@ -1,8 +1,11 @@
 import requests
 import json
 from pathlib import Path
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import os
+from PySide6.QtCore import QObject, Signal
+from threading import Event
+
 
 BASE_URL = "https://piuscores.arroweclip.se"  # Website
 
@@ -91,7 +94,7 @@ def load_json(file_path):
         return json_file
 
 
-def download_image(chart, output_dir):
+def download_image(chart, output_dir, cancel_event):
     """
     Single iteration for downloading an image using the JSON file as a guide
 
@@ -100,8 +103,12 @@ def download_image(chart, output_dir):
             One single chart from the JSON dict
         output_dir: Path
             Folder were song art will be downloaded
+        cancel_event: Event
+            To check cancelation of the process
 
     """
+    if cancel_event.is_set():
+        return
 
     image_url = chart["song"]["imagePath"]
     filename = Path(image_url).name
@@ -109,7 +116,7 @@ def download_image(chart, output_dir):
     output_path = output_dir / filename
 
     # Check if file already is in cache
-    if output_path.exists(): 
+    if output_path.exists():
         return
 
     try:
@@ -127,47 +134,73 @@ def download_image(chart, output_dir):
         return False
 
 
-def download_image_cache(json_file, progress_callback=None):
-    """
-    Main song art extracting iteration
-
-    Parameteres:
-        json_file: JSON
-            A dump JSON file with all charts information
-        progress_callback (default: None)
-            Helper that communicate function with GUI progress bar
-    """
-    charts = load_json(json_file)
-
-    output_dir = APPCACHE_DIR
-    output_dir.parent.mkdir(parents=True, exist_ok=True)
-
-    total = len(charts["results"])
-    completed = 0
-
-    with ThreadPoolExecutor(max_workers=15) as executor:
-        futures = [
-            executor.submit(download_image, chart, output_dir)
-            for chart in charts["results"]
-        ]
-
-        for future in as_completed(futures):
-            future.result()
-
-            completed += 1
-
-            if progress_callback:
-                progress = int(completed / total * 100)
-                progress_callback(progress)
-
-
 def delete_cache():
     """
     Deletes saved cache in cache folder
     """
-    
+
     output_dir = APPCACHE_DIR
 
     for songcard in output_dir.iterdir():
         if songcard.name.endswith(".png"):
             songcard.unlink()
+
+
+class CacheWorker(QObject):
+    progress = Signal(int)
+    finished = Signal()
+    error = Signal(str)
+    canceled = Signal()
+    status = Signal(int, int)
+
+    def __init__(self, json_file):
+        super().__init__()
+        self.json_file = json_file
+        self.cancel_event = Event()
+        self.cancel_request = False
+
+    def run(self):
+        try:
+            charts = load_json(self.json_file)
+
+            output_dir = APPCACHE_DIR
+            output_dir.parent.mkdir(parents=True, exist_ok=True)
+
+            total = len(charts["results"])
+            completed = 0
+
+            with ThreadPoolExecutor(max_workers=15) as executor:
+
+                futures = [
+                    executor.submit(
+
+                        download_image, chart, output_dir, self.cancel_event)
+                    for chart in charts["results"]
+                ]
+
+                for future in as_completed(futures):
+
+                    if self.cancel_event.is_set():
+                        for f in futures:
+                            f.cancel()
+
+                        self.canceled.emit()
+                        return
+
+                    future.result()
+
+                    completed += 1
+
+                    progress = int(completed / total * 100)
+
+                    self.status.emit(completed, total)
+                    self.progress.emit(progress)
+
+            self.finished.emit()
+
+        except Exception as e:
+            print(f"Download Failed: {e}")
+
+    def cancel(self):
+        print("CANCEL BUTTON PRESSED")
+        self.cancel_event.set()
