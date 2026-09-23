@@ -4,6 +4,8 @@ from PySide6.QtCore import Qt
 
 from api.api_functions import randomize_button
 from api.api_maincall import download_image_cache, delete_cache, get_charts_info
+
+from GUI.texts import cacheText
 from pathlib import Path
 
 
@@ -138,7 +140,7 @@ class MainWindow(QMainWindow):
         self.setLayout(main_layout)
 
     def cacheReload_yes_no(self):
-        if QMessageBox.question(self, "Reload Song Cards cache", "Do you want to reload the image cache for the songscards?. This requires internet connection\n(About 200MB of space).") == QMessageBox.Yes:
+        if QMessageBox.question(self, "Reload Song Cards cache", cacheText["ReloadCache"]) == QMessageBox.Yes:
             get_charts_info(chart_type="Single")
             get_charts_info(chart_type="Double")
             test_json = Path("api/dump_Single_None.json")
@@ -150,7 +152,7 @@ class MainWindow(QMainWindow):
             return
 
     def cacheDelete_yes_no(self):
-        if QMessageBox.question(self, "Delete Song Cards cache", "Do you want to delete the image cache for the songscards?. This action can only be fixed by downloading the cache again which requires internet connection\n(About 200MB of space).") == QMessageBox.Yes:
+        if QMessageBox.question(self, "Delete Song Cards cache", cacheText["DeleteCache"]) == QMessageBox.Yes:
 
             print("Deleting")
             delete_cache()
