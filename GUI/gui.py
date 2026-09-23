@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
 
 from api.api_functions import randomize_button
-from api.api_maincall import download_image_cache, delete_cache
+from api.api_maincall import download_image_cache, delete_cache, get_charts_info
 from pathlib import Path
 
 
@@ -21,10 +21,16 @@ class MainWindow(QMainWindow):
 
         fileMenu = menubar.addMenu("File")
 
+        # =========
+        # Cache
+        # =========
         cacheSubMenu = fileMenu.addMenu("Cache")
         cacheReloadCache = cacheSubMenu.addAction("Reload Song Cards Cache")
         cacheDeleteCache = cacheSubMenu.addAction("Delete Song Cards Cache")
 
+        self.cacheProgressBar = QProgressBar()
+
+        # =========
         exitAction = fileMenu.addAction("Exit")
 
         helpMenu = menubar.addMenu("Help")
@@ -94,7 +100,7 @@ class MainWindow(QMainWindow):
         wg_cardsperdrawtext.setAlignment(Qt.AlignRight)
 
         wg_numberofcards = QComboBox()
-        wg_numberofcards.addItems(["1", "2", "3", "4", "5", "6"])
+        wg_numberofcards.addItems(["1", "2", "3", "4"])
 
         wg_songtypestext = QLabel("Song Types")
         wg_arcade_checkbox = QCheckBox("Arcade")
@@ -133,10 +139,11 @@ class MainWindow(QMainWindow):
 
     def cacheReload_yes_no(self):
         if QMessageBox.question(self, "Reload Song Cards cache", "Do you want to reload the image cache for the songscards?. This requires internet connection\n(About 200MB of space).") == QMessageBox.Yes:
-
+            get_charts_info(chart_type="Single")
+            get_charts_info(chart_type="Double")
             test_json = Path("api/dump_Single_None.json")
             print("Downloading...")
-            download_image_cache(test_json)
+            download_image_cache(test_json, progress_callback=self.update_cacheProgressBar)
             print("Finish download")
 
         else:
@@ -151,3 +158,6 @@ class MainWindow(QMainWindow):
 
         else:
             return
+
+    def update_cacheProgressBar(self, value):
+        self.cacheProgressBar.setValue(value)

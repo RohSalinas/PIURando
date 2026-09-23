@@ -1,7 +1,7 @@
 import requests
 import json
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 
 BASE_URL = "https://piuscores.arroweclip.se"  # Website
@@ -21,7 +21,7 @@ APPCACHE_DIR = Path("api/appcache/songcards")
 
 def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_count=4):
     """
-    Fetch charts from /api/charts with optional filters.
+    Fetch charts from /api/charts with optional filters and save a dump JSON file.
 
     Parameters:
         mix        : Game version string, e.g. "Phoenix", "XX", "Fiesta2"
@@ -56,7 +56,7 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     print(f"URL    : {response.url}\n")
 
     # Output dir
-    output_file = Path(f"api/dump_{chart_type}_{level}.json")
+    output_file = Path(f"api/dump_{chart_type}.json")
 
     # Retrieval if API ok
     if response.ok:
@@ -75,19 +75,41 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
 
 
 def load_json(file_path):
+    """
+    Load JSON files
+
+    Parameteres:
+        file_path: Path
+            JSON dump file path
+
+    Returns:
+        JSON file as a python dict    
+    """
+
     with open(file_path) as f:
         json_file = json.load(f)
         return json_file
 
 
 def download_image(chart, output_dir):
+    """
+    Single iteration for downloading an image using the JSON file as a guide
+
+    Parameters:
+        chart: dict
+            One single chart from the JSON dict
+        output_dir: Path
+            Folder were song art will be downloaded
+
+    """
 
     image_url = chart["song"]["imagePath"]
     filename = Path(image_url).name
 
     output_path = output_dir / filename
 
-    if output_path.exists():
+    # Check if file already is in cache
+    if output_path.exists(): 
         return
 
     try:
@@ -105,12 +127,23 @@ def download_image(chart, output_dir):
         return False
 
 
-def download_image_cache(json_file):
+def download_image_cache(json_file, progress_callback=None):
+    """
+    Main song art extracting iteration
 
+    Parameteres:
+        json_file: JSON
+            A dump JSON file with all charts information
+        progress_callback (default: None)
+            Helper that communicate function with GUI progress bar
+    """
     charts = load_json(json_file)
 
     output_dir = APPCACHE_DIR
     output_dir.parent.mkdir(parents=True, exist_ok=True)
+
+    total = len(charts["results"])
+    completed = 0
 
     with ThreadPoolExecutor(max_workers=15) as executor:
         futures = [
@@ -118,11 +151,21 @@ def download_image_cache(json_file):
             for chart in charts["results"]
         ]
 
-        for future in futures:
+        for future in as_completed(futures):
             future.result()
+
+            completed += 1
+
+            if progress_callback:
+                progress = int(completed / total * 100)
+                progress_callback(progress)
 
 
 def delete_cache():
+    """
+    Deletes saved cache in cache folder
+    """
+    
     output_dir = APPCACHE_DIR
 
     for songcard in output_dir.iterdir():
