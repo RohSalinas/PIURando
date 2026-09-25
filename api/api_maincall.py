@@ -157,7 +157,7 @@ class CacheWorker(QObject):
         super().__init__()
         self.json_file = json_file
         self.cancel_event = Event()
-        self.cancel_request = False
+        # self.cancel_request = False
 
     def run(self):
         try:
@@ -181,6 +181,7 @@ class CacheWorker(QObject):
                 for future in as_completed(futures):
 
                     if self.cancel_event.is_set():
+                        print("FLAG ENTRO GRANDE EL COLO")
                         for f in futures:
                             f.cancel()
 
