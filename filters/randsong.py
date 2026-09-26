@@ -2,6 +2,8 @@ import random
 from pathlib import Path
 
 from filters.filtering import filter_bycategory, filter_bytype, filter_bylevel
+from api.api_maincall import load_json
+
 
 def randomize_chart(json_data, main_filters, sub_filters):
     """
@@ -16,12 +18,22 @@ def randomize_chart(json_data, main_filters, sub_filters):
             Dictionary with sub-filters selected from the user (Category of the chart)
     """
 
-    filter1 = filter_bytype(json_data, main_filters["type"])
-    filter2 = filter_bylevel(filter1, main_filters["level"])
+    json_file = load_json(json_data)
+    filter1 = filter_bytype(json_file, main_filters["type"])
+
+    filter2 = filter_bylevel(
+        filter1, main_filters["level"], main_filters["maxlevel"], main_filters["maxlevelflag"])
+
+    # print("Printing filter2")
+    # print(filter2)
+
     filter3 = filter_bycategory(filter2, sub_filters)
 
+    # print(filter3)
+
     random_chart = random.choice(filter3)
-    print(f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
+    print(
+        f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
 
     return random_chart
 

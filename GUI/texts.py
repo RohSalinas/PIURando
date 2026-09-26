@@ -5,5 +5,9 @@ cacheText = {
 
     "DeleteCache": "Do you want to delete the image cache for the songscards?.\n\n"
     "This action cannot be undone, and can only be fixed by downloading the cache again which requires internet connection.\n\n"
-    "(About 200MB of space)"
+    "(About 200MB of space)",
+
+    "FirstTime": "There is no cache detected for the song cards in this computer.\n\n"
+    "For running tournaments and for an offline experience, it is recommended to download the song cards cache for visualization.\n\n"
+    "This requires internet connection (About 200MB the first time). Do you want to proceed?"
 }

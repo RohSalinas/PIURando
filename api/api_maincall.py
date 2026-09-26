@@ -2,9 +2,10 @@ import requests
 import json
 from pathlib import Path
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from PySide6.QtCore import QObject, Signal
-from threading import Event
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 BASE_URL = "https://piuscores.arroweclip.se"  # Website
@@ -20,6 +21,19 @@ HEADERS = {
 # ===================================================
 
 APPCACHE_DIR = Path("api/appcache/songcards")
+
+
+# Create this once, reuse across all workers
+_session = requests.Session()
+_retry_strategy = Retry(
+    total=3,
+    backoff_factor=0.5,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+)
+_adapter = HTTPAdapter(max_retries=_retry_strategy)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
 
 
 def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_count=4):
@@ -59,7 +73,7 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     print(f"URL    : {response.url}\n")
 
     # Output dir
-    output_file = Path(f"api/dump_{chart_type}.json")
+    output_file = Path(f"api/appcache/dump_{chart_type}.json")
 
     # Retrieval if API ok
     if response.ok:
@@ -94,7 +108,7 @@ def load_json(file_path):
         return json_file
 
 
-def download_image(chart, output_dir, cancel_event):
+def download_image(chart, output_dir):
     """
     Single iteration for downloading an image using the JSON file as a guide
 
@@ -107,8 +121,6 @@ def download_image(chart, output_dir, cancel_event):
             To check cancelation of the process
 
     """
-    if cancel_event.is_set():
-        return
 
     image_url = chart["song"]["imagePath"]
     filename = Path(image_url).name
@@ -121,7 +133,7 @@ def download_image(chart, output_dir, cancel_event):
 
     try:
 
-        response = requests.get(image_url, timeout=15)
+        response = _session.get(image_url, timeout=10)
         response.raise_for_status()
 
         with open(output_path, "wb") as f:
@@ -142,7 +154,7 @@ def delete_cache():
     output_dir = APPCACHE_DIR
 
     for songcard in output_dir.iterdir():
-        if songcard.name.endswith(".png"):
+        if songcard.name.endswith(".png") or songcard.name.endswith(".cache"):
             songcard.unlink()
 
 
@@ -150,58 +162,61 @@ class CacheWorker(QObject):
     progress = Signal(int)
     finished = Signal()
     error = Signal(str)
-    canceled = Signal()
     status = Signal(int, int)
 
     def __init__(self, json_file):
         super().__init__()
         self.json_file = json_file
-        self.cancel_event = Event()
-        # self.cancel_request = False
 
     def run(self):
         try:
             charts = load_json(self.json_file)
-
             output_dir = APPCACHE_DIR
             output_dir.parent.mkdir(parents=True, exist_ok=True)
 
-            total = len(charts["results"])
+            results = charts["results"]
+            total = len(results)
             completed = 0
+            cancelled = False
 
             with ThreadPoolExecutor(max_workers=15) as executor:
-
-                futures = [
+                futures = {
                     executor.submit(
+                        download_image, chart, output_dir
+                    ): chart
+                    for chart in results
+                }
 
-                        download_image, chart, output_dir, self.cancel_event)
-                    for chart in charts["results"]
-                ]
+                pending = set(futures.keys())
 
-                for future in as_completed(futures):
+                while pending and not cancelled:
 
-                    if self.cancel_event.is_set():
-                        print("FLAG ENTRO GRANDE EL COLO")
-                        for f in futures:
-                            f.cancel()
+                    # Wait up to 0.2s for any future to complete
+                    done, pending = wait(
+                        pending, timeout=0.2,
+                        return_when=FIRST_COMPLETED
+                    )
 
-                        self.canceled.emit()
-                        return
+                    for future in done:
+                        try:
+                            future.result()
+                        except Exception as e:
+                            print(f"Worker error: {e}")
+                        completed += 1
 
-                    future.result()
+                    if completed:
+                        progress = int(completed / total * 100)
+                        self.status.emit(completed, total)
+                        self.progress.emit(progress)
 
-                    completed += 1
-
-                    progress = int(completed / total * 100)
-
-                    self.status.emit(completed, total)
-                    self.progress.emit(progress)
-
+            (APPCACHE_DIR/".cache").touch()
             self.finished.emit()
+
+            # cache_filecheck = ".cache"
+            # if not cache_filecheck in APPCACHE_DIR:
+            #     with open(APPCACHE_DIR/cache_filecheck, "w") as f:
+            #         pass
 
         except Exception as e:
             print(f"Download Failed: {e}")
-
-    def cancel(self):
-        print("CANCEL BUTTON PRESSED")
-        self.cancel_event.set()
+            self.error.emit(str(e))
