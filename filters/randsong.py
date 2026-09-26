@@ -24,12 +24,7 @@ def randomize_chart(json_data, main_filters, sub_filters):
     filter2 = filter_bylevel(
         filter1, main_filters["level"], main_filters["maxlevel"], main_filters["maxlevelflag"])
 
-    # print("Printing filter2")
-    # print(filter2)
-
     filter3 = filter_bycategory(filter2, sub_filters)
-
-    # print(filter3)
 
     random_chart = random.choice(filter3)
     print(

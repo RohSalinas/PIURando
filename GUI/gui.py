@@ -71,20 +71,33 @@ class MainWindow(QMainWindow):
 
         main_layout = QVBoxLayout(central_widget)
 
+        self.randomizer = RandomizerButton()
+
         # =========================
-        # Song card art section
+        # Song Card Art section
         # =========================
 
         layout_songart = QGridLayout()
 
-        wg_songart = QLabel(self)
-        pixmap = QPixmap("placeholder.png")
-        wg_songart.setPixmap(pixmap)
-        self.resize(pixmap.width(), pixmap.height())
+        self.wg_songart = QLabel(self)
+        self.pixmap = QPixmap("placeholder.png")
+        self.wg_songart.setPixmap(self.pixmap)
+        self.resize(self.pixmap.width(), self.pixmap.height())
 
-        wg_songart.setAlignment(Qt.AlignCenter)
+        self.wg_songart.setAlignment(Qt.AlignCenter)
 
-        layout_songart.addWidget(wg_songart, 0, 0)
+        layout_songart.addWidget(self.wg_songart, 0, 0)
+
+        # *************************
+        # Song Card Art Triggers
+        # *************************
+
+        self.randomizer = RandomizerButton()
+        self.randomizer.randomize_over.connect(
+            self.randomizer.assign_chart_to_image)
+        self.randomizer.imagechange.connect(
+            lambda path: self.wg_songart.setPixmap(QPixmap(path))
+        )
 
         # =========================
         # Main settings: Mode, Levels
@@ -150,33 +163,33 @@ class MainWindow(QMainWindow):
         # Randomize button execution
         # =========================
         layout_button = QHBoxLayout()
-        randomizer = RandomizerButton()
+        # randomizer = RandomizerButton()
 
         wg_button = QPushButton("Randomize!")
 
         layout_button.addWidget(wg_button)
 
-        wg_button.clicked.connect(lambda: randomizer.randomize_button(self.json_singledump,
-                                                                      self.json_doubledump,
-                                                                      self.wg_mode.currentText(),
-                                                                      self.wg_level_from.text(),
-                                                                      self.wg_level_to.text(),
-                                                                      self.wg_numberofcards.currentText(
-                                                                      ),
-                                                                      {
-                                                                          "arcade": self.wg_arcade_checkbox.isChecked(),
-                                                                          "shortcut": self.wg_shortcut_checkbox.isChecked(),
-                                                                          "fullsong": self.wg_fullsong_checkbox.isChecked(),
-                                                                          "remix": self.wg_remix_checkbox.isChecked()
-                                                                      },
-                                                                      self.wg_checkbox_intervals.isChecked()))
+        wg_button.clicked.connect(lambda: self.randomizer.randomize_button(self.json_singledump,
+                                                                           self.json_doubledump,
+                                                                           self.wg_mode.currentText(),
+                                                                           self.wg_level_from.text(),
+                                                                           self.wg_level_to.text(),
+                                                                           self.wg_numberofcards.currentText(
+                                                                           ),
+                                                                           {
+                                                                               "arcade": self.wg_arcade_checkbox.isChecked(),
+                                                                               "shortcut": self.wg_shortcut_checkbox.isChecked(),
+                                                                               "fullsong": self.wg_fullsong_checkbox.isChecked(),
+                                                                               "remix": self.wg_remix_checkbox.isChecked()
+                                                                           },
+                                                                           self.wg_checkbox_intervals.isChecked()))
 
-        randomizer.error_nominlvl.connect(lambda: QMessageBox.information(self,
-                                                                          "Minimum level missing",
-                                                                          "Please input a minimum song level for your search"))
-        randomizer.error_minovermax.connect(lambda: QMessageBox.information(self,
-                                                                            "Max level too low",
-                                                                            "Your 'Max level' cannot be lower than your 'Min level'"))
+        self.randomizer.error_nominlvl.connect(lambda: QMessageBox.information(self,
+                                                                               "Minimum level missing",
+                                                                               "Please input a minimum song level for your search"))
+        self.randomizer.error_minovermax.connect(lambda: QMessageBox.information(self,
+                                                                                 "Max level too low",
+                                                                                 "Your 'Max level' cannot be lower than your 'Min level'"))
         # =========================
         # Add all layouts to Main Layout
         # =========================

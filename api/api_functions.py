@@ -1,5 +1,6 @@
 from filters.randsong import randomize_chart
 from PySide6.QtCore import QObject, Signal
+from pathlib import Path
 
 
 class RandomizerButton(QObject):
@@ -7,8 +8,15 @@ class RandomizerButton(QObject):
     error_nominlvl = Signal()
     error_minovermax = Signal()
 
+    randomize_over = Signal()
+
+    imagechange = Signal(str)
+
     def __init__(self):
         super().__init__()
+        self.cachefolder = Path("api/appcache/songcards/")
+        self.randomchart = None
+        self.songcardname = ""
 
     def randomize_button(self, json_single, json_double, mode, fromlvl, tolvl, n_songs, subsettings, maxlevel=False):
 
@@ -36,49 +44,21 @@ class RandomizerButton(QObject):
             "n_songs": int_n_songs,
         }
 
-        # print("Printing mf")
-        # print(mf)
-        # print("Printing variables")
-        # print(mode, int_fromlvl, int_tolvl, int_n_songs)
-        # print("Printing variables types")
-        # print(type(mode), type(int_fromlvl), type(int_tolvl), type(int_n_songs))
-
         if mf["type"] == "Single":
-            randomize_chart(json_single, mf, subsettings)
+            self.random_chart = randomize_chart(json_single, mf, subsettings)
+
         if mf["type"] == "Double":
-            randomize_chart(json_double, mf, subsettings)
+            self.random_chart = randomize_chart(json_double, mf, subsettings)
 
+        imageurl = self.random_chart["song"]["imagePath"]
+        self.songcardname = Path(imageurl).name
 
-# def randomize_button(json_single, json_double, mode, fromlvl, tolvl, n_songs, subsettings, maxlevel=False):
-#     error = Signal(str)
+        print(self.random_chart)
+        print(imageurl)
+        print(self.songcardname)
 
-#     if tolvl:
-#         int_tolvl = int(tolvl)
-#     else:
-#         int_tolvl = None
+        self.randomize_over.emit()
 
-#     if not int_tolvl:
-#         return
-
-#     int_fromlvl = int(fromlvl)
-#     int_n_songs = int(n_songs)
-
-#     mf = {
-#         "type": mode,
-#         "level": int_fromlvl,
-#         "maxlevel": int_tolvl,
-#         "maxlevelflag": maxlevel,
-#         "n_songs": int_n_songs,
-#     }
-
-#     # print("Printing mf")
-#     # print(mf)
-#     # print("Printing variables")
-#     # print(mode, int_fromlvl, int_tolvl, int_n_songs)
-#     # print("Printing variables types")
-#     # print(type(mode), type(int_fromlvl), type(int_tolvl), type(int_n_songs))
-
-#     if mf["type"] == "Single":
-#         randomize_chart(json_single, mf, subsettings)
-#     if mf["type"] == "Double":
-#         randomize_chart(json_double, mf, subsettings)
+    def assign_chart_to_image(self):
+        path_to_random = Path(f"api/appcache/songcards") / self.songcardname
+        self.imagechange.emit(str(path_to_random))

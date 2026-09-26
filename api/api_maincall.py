@@ -212,11 +212,6 @@ class CacheWorker(QObject):
             (APPCACHE_DIR/".cache").touch()
             self.finished.emit()
 
-            # cache_filecheck = ".cache"
-            # if not cache_filecheck in APPCACHE_DIR:
-            #     with open(APPCACHE_DIR/cache_filecheck, "w") as f:
-            #         pass
-
         except Exception as e:
             print(f"Download Failed: {e}")
             self.error.emit(str(e))
