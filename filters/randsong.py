@@ -1,7 +1,7 @@
 import random
 from pathlib import Path
 
-from filters.filtering import filter_bycategory, filter_bytype, filter_bylevel
+from filters.filtering import filter_bycategory, filter_bytype, filter_bylevel, filter_coop
 from api.api_maincall import load_json
 
 
@@ -19,6 +19,16 @@ def randomize_chart(json_data, main_filters, sub_filters):
     """
 
     json_file = load_json(json_data)
+
+    if main_filters["type"] == "CoOp":
+        filterC = filter_coop(
+            json_file, main_filters["type"], main_filters["persons"])
+
+        random_chart = random.choice(filterC)
+        print(
+            f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
+        return random_chart
+
     filter1 = filter_bytype(json_file, main_filters["type"])
 
     filter2 = filter_bylevel(
@@ -26,21 +36,11 @@ def randomize_chart(json_data, main_filters, sub_filters):
 
     filter3 = filter_bycategory(filter2, sub_filters)
 
+    if not filter3:
+        return None
+
     random_chart = random.choice(filter3)
     print(
         f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
 
     return random_chart
-
-
-# jsonpath = load_json(Path("api/dump_Double_None.json"))
-# mf = {"type": "Double",
-#       "level": 18}
-
-# sf = {  "arcade": False,
-#         "shortcut": False,
-#         "fullsong": False,
-#         "remix": False
-#         }
-
-# randochart = randomize_chart(jsonpath, mf, sf)

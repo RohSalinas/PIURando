@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, QThread
 from api.api_functions import RandomizerButton
 from api.api_maincall import delete_cache, get_charts_info, CacheWorker
 
-from GUI.texts import cacheText
+from GUI.texts import cacheText, stylesheets
 from pathlib import Path
 
 
@@ -30,14 +30,13 @@ class MainWindow(QMainWindow):
         # Cache Sub Menu
         # =========================
         self.cache_flag = Path("api/appcache/songcards/.cache")
-        self.json_singledump = Path("api/appcache/dump_Single.json")
-        self.json_doubledump = Path("api/appcache/dump_Double.json")
+        self.json_dump = Path("api/appcache/dump_all.json")
 
         layout_cache = QHBoxLayout()
 
         cacheSubMenu = fileMenu.addMenu("Cache")
-        cacheReloadCache = cacheSubMenu.addAction("Reload Song Cards Cache")
-        cacheDeleteCache = cacheSubMenu.addAction("Delete Song Cards Cache")
+        cacheReloadCache = cacheSubMenu.addAction("Reload song cards cache")
+        cacheDeleteCache = cacheSubMenu.addAction("Delete song cards cache")
 
         self.cacheProgressBar = QProgressBar()
         self.cacheProgressBar.setRange(0, 100)
@@ -79,11 +78,8 @@ class MainWindow(QMainWindow):
 
         layout_songart = QGridLayout()
 
-        self.wg_songart = QLabel(self)
-        self.pixmap = QPixmap("placeholder.png")
-        self.wg_songart.setPixmap(self.pixmap)
-        self.resize(self.pixmap.width(), self.pixmap.height())
-
+        self.wg_songart = ImageLabel()
+        self.wg_songart.set_image("placeholder.png")
         self.wg_songart.setAlignment(Qt.AlignCenter)
 
         layout_songart.addWidget(self.wg_songart, 0, 0)
@@ -92,12 +88,40 @@ class MainWindow(QMainWindow):
         # Song Card Art Triggers
         # *************************
 
-        self.randomizer = RandomizerButton()
+        # self.randomizer = RandomizerButton()
         self.randomizer.randomize_over.connect(
             self.randomizer.assign_chart_to_image)
         self.randomizer.imagechange.connect(
-            lambda path: self.wg_songart.setPixmap(QPixmap(path))
+            lambda path: self.wg_songart.set_image(path)
         )
+        # self.randomizer.imagechange.connect(
+        #     lambda path: self.wg_songart.setPixmap(QPixmap(path))
+        # )
+
+        # =========================
+        # Song Level
+        # =========================
+
+        layout_ShowLevel = QHBoxLayout()
+
+        self.wg_showlevel = QLabel("Selected chart level will be shown here.")
+        self.wg_showlevel.setAlignment(Qt.AlignCenter)
+        self.wg_showlevel.setFixedHeight(50)
+
+        self.wg_showlevel.setStyleSheet(stylesheets["defaultLevel"])
+
+        layout_ShowLevel.addWidget(self.wg_showlevel)
+
+        # *************************
+        # Song Level Triggers
+        # *************************
+
+        self.randomizer.levelchange.connect(
+            lambda level: self.wg_showlevel.setText(level))
+        self.randomizer.levelchange.connect(lambda level:
+                                            self.wg_showlevel.setStyleSheet(stylesheets["greenStyle"]) if "D" in level else
+                                            self.wg_showlevel.setStyleSheet(stylesheets["redStyle"]) if "S" in level else
+                                            self.wg_showlevel.setStyleSheet(stylesheets["coopStyle"]))
 
         # =========================
         # Main settings: Mode, Levels
@@ -110,6 +134,11 @@ class MainWindow(QMainWindow):
         self.wg_mode = QComboBox()
         self.wg_mode.addItems(["Single", "Double", "Co-Op"])
 
+        self.wg_coop_text = QLabel("Co-Op players")
+        self.wg_coop_players = QComboBox()
+        self.wg_coop_players.addItems(["any", "2", "3", "4", "5"])
+        self.wg_coop_players.setEnabled(False)
+
         self.wg_leveltext = QLabel("From Level")
 
         self.wg_level_from = QLineEdit(maxLength=2)
@@ -121,6 +150,8 @@ class MainWindow(QMainWindow):
 
         layout_MainSettings.addWidget(wg_modetext)
         layout_MainSettings.addWidget(self.wg_mode)
+        layout_MainSettings.addWidget(self.wg_coop_text)
+        layout_MainSettings.addWidget(self.wg_coop_players)
         layout_MainSettings.addWidget(self.wg_leveltext)
         layout_MainSettings.addWidget(self.wg_level_from)
         layout_MainSettings.addWidget(self.wg_checkbox_intervals)
@@ -132,6 +163,7 @@ class MainWindow(QMainWindow):
 
         self.wg_checkbox_intervals.checkStateChanged.connect(
             self.activate_maxlevel)
+        self.wg_mode.currentTextChanged.connect(self.activate_coop_players)
 
         # =========================
         # Sub settings: Song category, number of cards
@@ -151,6 +183,17 @@ class MainWindow(QMainWindow):
         self.wg_fullsong_checkbox = QCheckBox("Full Song")
         self.wg_remix_checkbox = QCheckBox("Remix")
 
+        self.wg_offlinemode_text = QLabel("Offline mode")
+        self.wg_offlinemode_text.setStyleSheet("""
+            QLabel {
+                color: white;
+                background-color: navyblue;
+                font-weight: bold;
+                border-radius:5px;
+            }
+            """)
+        self.wg_offlinemode = QCheckBox()
+
         layout_SecSettings.addWidget(self.wg_cardsperdrawtext)
         layout_SecSettings.addWidget(self.wg_numberofcards)
         layout_SecSettings.addWidget(self.wg_songtypestext)
@@ -158,6 +201,15 @@ class MainWindow(QMainWindow):
         layout_SecSettings.addWidget(self.wg_shortcut_checkbox)
         layout_SecSettings.addWidget(self.wg_fullsong_checkbox)
         layout_SecSettings.addWidget(self.wg_remix_checkbox)
+        layout_SecSettings.addWidget(self.wg_offlinemode_text)
+        layout_SecSettings.addWidget(self.wg_offlinemode)
+
+        # *************************
+        # Sub Settings Triggers
+        # *************************
+
+        self.wg_offlinemode.toggled.connect(
+            self.check_change_internet)
 
         # =========================
         # Randomize button execution
@@ -169,8 +221,7 @@ class MainWindow(QMainWindow):
 
         layout_button.addWidget(wg_button)
 
-        wg_button.clicked.connect(lambda: self.randomizer.randomize_button(self.json_singledump,
-                                                                           self.json_doubledump,
+        wg_button.clicked.connect(lambda: self.randomizer.randomize_button(self.json_dump,
                                                                            self.wg_mode.currentText(),
                                                                            self.wg_level_from.text(),
                                                                            self.wg_level_to.text(),
@@ -182,7 +233,11 @@ class MainWindow(QMainWindow):
                                                                                "fullsong": self.wg_fullsong_checkbox.isChecked(),
                                                                                "remix": self.wg_remix_checkbox.isChecked()
                                                                            },
-                                                                           self.wg_checkbox_intervals.isChecked()))
+                                                                           self.wg_coop_players.currentText(),
+                                                                           self.wg_checkbox_intervals.isChecked(),
+                                                                           offlinemode=self.wg_offlinemode.isChecked()
+                                                                           )
+                                  )
 
         self.randomizer.error_nominlvl.connect(lambda: QMessageBox.information(self,
                                                                                "Minimum level missing",
@@ -190,10 +245,15 @@ class MainWindow(QMainWindow):
         self.randomizer.error_minovermax.connect(lambda: QMessageBox.information(self,
                                                                                  "Max level too low",
                                                                                  "Your 'Max level' cannot be lower than your 'Min level'"))
+        self.randomizer.error_nolevel.connect(lambda: QMessageBox.information(self,
+                                                                              "Chart not found",
+                                                                              "No charts were found. Please try different value(s) and/or filters."))
+
         # =========================
         # Add all layouts to Main Layout
         # =========================
         main_layout.addLayout(layout_songart)
+        main_layout.addLayout(layout_ShowLevel)
         main_layout.addLayout(layout_MainSettings)
         main_layout.addLayout(layout_SecSettings)
         main_layout.addLayout(layout_button)
@@ -206,12 +266,19 @@ class MainWindow(QMainWindow):
         # Cache Files location
         # =========================
         self.cache_flag = Path("api/appcache/songcards/.cache")
-        self.json_singledump = Path("api/appcache/dump_Single.json")
-        self.json_doubledump = Path("api/appcache/dump_Double.json")
+        self.json_dump = Path("api/appcache/dump_all.json")
 
+# ==========================================================================================================================================================
+# ==========================================================================================================================================================
+# ==========================================================================================================================================================
+# ==========================================================================================================================================================
 # ==========================================================================================================================================================
 
     def first_time_cache(self):
+        if self.cache_flag.exists():
+            self.wg_offlinemode.setChecked(True)
+            return
+
         if not self.cache_flag.exists():
             self.cache_flag = QMessageBox.question(
                 self, "No Cache found", cacheText["FirstTime"])
@@ -221,6 +288,7 @@ class MainWindow(QMainWindow):
         else:
             get_charts_info(chart_type="Single")
             get_charts_info(chart_type="Double")
+            get_charts_info()
             jsondump_forsongcard = Path("api/appcache/dump_Single.json")
 
             # Keep references alive
@@ -253,6 +321,7 @@ class MainWindow(QMainWindow):
 
             # Finish
             if self.cache_dialog.finished:
+                self.wg_offlinemode.setChecked(True)
                 self.cache_confirmation = QMessageBox.information(
                     self, "First Cache", "Song cards downloaded successfully!")
 
@@ -265,7 +334,8 @@ class MainWindow(QMainWindow):
 
         get_charts_info(chart_type="Single")
         get_charts_info(chart_type="Double")
-        jsondump_forsongcard = Path("api/dump_Single.json")
+        get_charts_info()
+        jsondump_forsongcard = Path("api/appcache/dump_Single.json")
 
         # Keep references alive
         self.cache_dialog = CacheDialog(self)
@@ -296,7 +366,8 @@ class MainWindow(QMainWindow):
 
         # Finish
         if self.cache_dialog.finished:
-            self.cache_confirmation = QMessageBox.information(
+            self.wg_offlinemode.setChecked(True)
+            self.rel_cache_confirmation = QMessageBox.information(
                 self, "Reload Cache", "Song cards updated successfully!")
 
     def cacheDelete_yes_no(self):
@@ -306,8 +377,8 @@ class MainWindow(QMainWindow):
             print("Deleting")
             delete_cache()
             print("Finish deleting")
-            self.cache_confirmation = QMessageBox.information(
-                self, "Reload Cache", "Song cards updated successfully!")
+            self.def_cache_confirmation = QMessageBox.information(
+                self, "Delete Cache", "Song cards cache deleted successfully!")
 
         else:
             return
@@ -323,7 +394,34 @@ class MainWindow(QMainWindow):
             self.wg_level_to.setEnabled(False)
             self.wg_level_to.clear()
 
-# ==========================================================================================================================================================
+    def activate_coop_players(self):
+        checkflag = self.wg_mode.currentText()
+        if checkflag == "Co-Op":
+            self.wg_coop_players.setEnabled(True)
+            self.wg_numberofcards.setEnabled(False)
+        else:
+            self.wg_coop_players.setEnabled(False)
+            self.wg_numberofcards.setEnabled(True)
+
+    def check_change_internet(self, checked):
+        if checked:
+            if self.cache_flag.exists():
+                return
+
+            self.online_cof = QMessageBox.information(
+                self, "Internet Mode", cacheText["On_to_OfflineMode_nocache"])
+            self.wg_offlinemode.blockSignals(True)
+            self.wg_offlinemode.setChecked(False)
+            self.wg_offlinemode.blockSignals(False)
+
+        else:
+            if self.cache_flag.exists():
+                self.online_cof = QMessageBox.information(
+                    self, "Internet Mode", cacheText["Off_to_OnlineMode_cache"])
+            else:
+                self.online_cof = QMessageBox.information(
+                    self, "Internet Mode", cacheText["Off_to_OnlineMode_nocache"])
+        # ==========================================================================================================================================================
 
 
 class CacheDialog(QDialog):
@@ -338,3 +436,30 @@ class CacheDialog(QDialog):
         layout_cachedialog = QVBoxLayout(self)
         layout_cachedialog.addWidget(self.label)
         layout_cachedialog.addWidget(self.progress)
+
+
+class ImageLabel(QLabel):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pixmap_original = QPixmap()
+
+    def set_image(self, path):
+        self.pixmap_original = QPixmap(path)
+        self.update_image()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_image()
+
+    def update_image(self):
+        if self.pixmap_original.isNull():
+            return
+
+        scaled = self.pixmap_original.scaled(
+            self.size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+
+        self.setPixmap(scaled)

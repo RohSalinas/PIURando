@@ -1,6 +1,3 @@
-from pathlib import Path
-import random
-
 from api.api_maincall import load_json
 
 """
@@ -50,3 +47,21 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
             filtered_results.append(chart)
 
     return filtered_results  # List with dict
+
+
+def filter_coop(json_data, type, n_persons):
+    filtered_results = []
+    true_filters = []
+
+    for chart in json_data["results"]:
+        if type == chart["type"]:
+            filtered_results.append(chart)
+
+    if n_persons == "any":
+        return filtered_results  # List with dicts
+    else:
+        coop_n = f"{type}{n_persons}"
+        for chart in filtered_results:
+            if chart["shorthand"] == coop_n:
+                true_filters.append(chart)
+        return true_filters

@@ -51,7 +51,7 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     if count:
         params = {"Count": max_count}
     else:
-        params = {"Count": 9999}
+        params = {"Count": 99999}
 
     # Mix, type and level
     if mix:
@@ -73,7 +73,10 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     print(f"URL    : {response.url}\n")
 
     # Output dir
-    output_file = Path(f"api/appcache/dump_{chart_type}.json")
+    if not chart_type:
+        output_file = Path(f"api/appcache/dump_all.json")
+    else:
+        output_file = Path(f"api/appcache/dump_{chart_type}.json")
 
     # Retrieval if API ok
     if response.ok:
