@@ -1,3 +1,5 @@
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtWidgets import QLabel, QSizePolicy
 from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QThread
@@ -17,7 +19,7 @@ class MainWindow(QMainWindow):
         # =========================
         # Windows size
         # =========================
-        self.resize(640, 320)
+        self.resize(1280, 640)
 
         # =========================
         # Menu bar
@@ -32,7 +34,7 @@ class MainWindow(QMainWindow):
         self.cache_flag = Path("api/appcache/songcards/.cache")
         self.json_dump = Path("api/appcache/dump_all.json")
 
-        layout_cache = QHBoxLayout()
+        # layout_cache = QHBoxLayout()
 
         cacheSubMenu = fileMenu.addMenu("Cache")
         cacheReloadCache = cacheSubMenu.addAction("Reload song cards cache")
@@ -41,7 +43,7 @@ class MainWindow(QMainWindow):
         self.cacheProgressBar = QProgressBar()
         self.cacheProgressBar.setRange(0, 100)
 
-        layout_cache.addWidget(self.cacheProgressBar)
+        # layout_cache.addWidget(self.cacheProgressBar)
 
         # =========================
         # Exit, Help and About section
@@ -73,55 +75,50 @@ class MainWindow(QMainWindow):
         self.randomizer = RandomizerButton()
 
         # =========================
-        # Song Card Art section
+        # Song Card Art / Level section
         # =========================
 
-        layout_songart = QGridLayout()
+        self.layout_songart = QGridLayout()
 
-        self.wg_songart = ImageLabel()
-        self.wg_songart.set_image("placeholder.png")
-        self.wg_songart.setAlignment(Qt.AlignCenter)
+        self.layout_songart.setContentsMargins(10, 10, 10, 10)
+        self.layout_songart.setSpacing(10)
 
-        layout_songart.addWidget(self.wg_songart, 0, 0)
+        # Make both columns equal width
+        self.layout_songart.setColumnStretch(0, 1)
+        self.layout_songart.setColumnStretch(1, 1)
+
+        self.song_images = []
+        self.song_levels = []
+
+        for i in range(4):
+
+            image = ImageLabel()
+
+            level = QLabel("")
+            level.setAlignment(Qt.AlignCenter)
+            level.setFixedHeight(50)
+            level.setStyleSheet(stylesheets["defaultLevel"])
+
+            self.song_images.append(image)
+            self.song_levels.append(level)
+
+        for i in range(4):
+
+            row = i // 2
+            col = i % 2
+
+            self.layout_songart.addWidget(self.song_images[i], row * 2, col)
+            self.layout_songart.addWidget(
+                self.song_levels[i], row * 2 + 1, col)
 
         # *************************
-        # Song Card Art Triggers
+        # Song Card Art /Level Triggers
         # *************************
 
-        # self.randomizer = RandomizerButton()
         self.randomizer.randomize_over.connect(
             self.randomizer.assign_chart_to_image)
-        self.randomizer.imagechange.connect(
-            lambda path: self.wg_songart.set_image(path)
-        )
-        # self.randomizer.imagechange.connect(
-        #     lambda path: self.wg_songart.setPixmap(QPixmap(path))
-        # )
 
-        # =========================
-        # Song Level
-        # =========================
-
-        layout_ShowLevel = QHBoxLayout()
-
-        self.wg_showlevel = QLabel("Selected chart level will be shown here.")
-        self.wg_showlevel.setAlignment(Qt.AlignCenter)
-        self.wg_showlevel.setFixedHeight(50)
-
-        self.wg_showlevel.setStyleSheet(stylesheets["defaultLevel"])
-
-        layout_ShowLevel.addWidget(self.wg_showlevel)
-
-        # *************************
-        # Song Level Triggers
-        # *************************
-
-        self.randomizer.levelchange.connect(
-            lambda level: self.wg_showlevel.setText(level))
-        self.randomizer.levelchange.connect(lambda level:
-                                            self.wg_showlevel.setStyleSheet(stylesheets["greenStyle"]) if "D" in level else
-                                            self.wg_showlevel.setStyleSheet(stylesheets["redStyle"]) if "S" in level else
-                                            self.wg_showlevel.setStyleSheet(stylesheets["coopStyle"]))
+        self.randomizer.newcharts_ok.connect(self.update_song_cards)
 
         # =========================
         # Main settings: Mode, Levels
@@ -252,21 +249,14 @@ class MainWindow(QMainWindow):
         # =========================
         # Add all layouts to Main Layout
         # =========================
-        main_layout.addLayout(layout_songart)
-        main_layout.addLayout(layout_ShowLevel)
+        main_layout.addLayout(self.layout_songart)
         main_layout.addLayout(layout_MainSettings)
         main_layout.addLayout(layout_SecSettings)
         main_layout.addLayout(layout_button)
-        main_layout.addLayout(layout_cache)
+        # main_layout.addLayout(layout_cache)
 
         self.setLayout(main_layout)
         self.first_time_cache()
-
-        # =========================
-        # Cache Files location
-        # =========================
-        self.cache_flag = Path("api/appcache/songcards/.cache")
-        self.json_dump = Path("api/appcache/dump_all.json")
 
 # ==========================================================================================================================================================
 # ==========================================================================================================================================================
@@ -399,6 +389,7 @@ class MainWindow(QMainWindow):
         if checkflag == "Co-Op":
             self.wg_coop_players.setEnabled(True)
             self.wg_numberofcards.setEnabled(False)
+            # self.wg_numberofcards.set
         else:
             self.wg_coop_players.setEnabled(False)
             self.wg_numberofcards.setEnabled(True)
@@ -421,7 +412,79 @@ class MainWindow(QMainWindow):
             else:
                 self.online_cof = QMessageBox.information(
                     self, "Internet Mode", cacheText["Off_to_OnlineMode_nocache"])
-        # ==========================================================================================================================================================
+
+    def update_song_cards(self, charts):
+
+        # Remove widgets from the layout (Fresh start)
+        for image in self.song_images:
+            self.layout_songart.removeWidget(image)
+
+        for level in self.song_levels:
+            self.layout_songart.removeWidget(level)
+
+        # Hide everything (Fresh start)
+        for image in self.song_images:
+            image.hide()
+
+        for level in self.song_levels:
+            level.hide()
+
+        if len(charts) == 1:
+
+            image = self.song_images[0]
+            level = self.song_levels[0]
+
+            image.set_image(charts[0]["image"])
+            level.setText(charts[0]["level"])
+
+            self.set_level_style(level, charts[0]["level"])
+
+            self.layout_songart.addWidget(image, 0, 0, 1, 2)
+            self.layout_songart.addWidget(level, 1, 0, 1, 2)
+
+            image.show()
+            level.show()
+
+        else:
+
+            for i, chart in enumerate(charts):
+
+                image = self.song_images[i]
+                level = self.song_levels[i]
+
+                image.set_image(chart["image"])
+                level.setText(chart["level"])
+
+                self.set_level_style(level, chart["level"])
+
+                row = i // 2
+                col = i % 2
+
+                self.layout_songart.addWidget(image, row * 2, col)
+                self.layout_songart.addWidget(level, row * 2 + 1, col)
+
+                image.show()
+                level.show()
+
+    def set_level_style(self, label, level):
+
+        if "D" in level:
+            label.setStyleSheet(stylesheets["greenStyle"])
+
+        elif "S" in level:
+            label.setStyleSheet(stylesheets["redStyle"])
+
+        elif "C" in level:
+            label.setStyleSheet(stylesheets["coopStyle"])
+
+        else:
+            label.setStyleSheet(stylesheets["defaultLevel"])
+
+# ==============================================================================================================================================
+# ==============================================================================================================================================
+# ==============================================================================================================================================
+# ==============================================================================================================================================
+# ==============================================================================================================================================
 
 
 class CacheDialog(QDialog):
@@ -442,10 +505,20 @@ class ImageLabel(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.pixmap_original = QPixmap()
 
+        self.setAlignment(Qt.AlignCenter)
+
+        # Allow the layout to freely resize the label
+        self.setMinimumSize(0, 0)
+        self.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Expanding
+        )
+
     def set_image(self, path):
-        self.pixmap_original = QPixmap(path)
+        self.pixmap_original = QPixmap(str(path))
         self.update_image()
 
     def resizeEvent(self, event):
@@ -463,3 +536,11 @@ class ImageLabel(QLabel):
         )
 
         self.setPixmap(scaled)
+
+    # Important: don't let the original image dictate
+    # the minimum size of the window.
+    def sizeHint(self):
+        return QSize(0, 0)
+
+    def minimumSizeHint(self):
+        return QSize(0, 0)

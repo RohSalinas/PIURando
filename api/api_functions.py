@@ -13,8 +13,9 @@ class RandomizerButton(QObject):
 
     randomize_over = Signal()
 
-    imagechange = Signal(str)
-    levelchange = Signal(str)
+    imagechange = Signal(list)
+    levelchange = Signal(list)
+    newcharts_ok = Signal(list)
 
     def __init__(self):
         super().__init__()
@@ -22,39 +23,12 @@ class RandomizerButton(QObject):
         self.randomchart = None
         self.songcardname = ""
         self.songlevel = ""
-        self.GREEN_LEVEL_STYLE = """
-            QLabel {
-                color: white;
-                background-color: green;
-                font-size: 18px;
-                font-weight: bold;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            """
-
-        self.RED_LEVEL_STYLE = """
-                QLabel {
-                    color: white;
-                    background-color: red;
-                    font-size: 18px;
-                    font-weight: bold;
-                    padding: 10px;
-                    border-radius: 10px;
-                }
-                """
-        self.COOP_LEVEL_STYLE = """
-                QLabel {
-                    color: black;
-                    background-color: yellow;
-                    font-size: 18px;
-                    font-weight: bold;
-                    padding: 10px;
-                    border-radius: 10px;
-                }
-                """
+        self.allcharts = []
+        self.nsongs = None
 
     def randomize_button(self, json_all, mode, fromlvl, tolvl, n_songs, subsettings, n_persons, maxlevel=False, offlinemode=True):
+
+        self.allcharts.clear()
 
         if not offlinemode:
             APPCACHE_DIR = Path("api/appcache/songcards")
@@ -76,7 +50,21 @@ class RandomizerButton(QObject):
             if self.random_chart is None:
                 self.error_nolevel.emit()
                 return
+
+            imageurl = self.random_chart["song"]["imagePath"]
+            if not offlinemode:
+                download_image(self.random_chart, output_dir)
+
+            self.songcardname = Path(imageurl).name
+            self.songlevel = self.random_chart["shorthand"]
+
+            chart_dict = {"level": self.songlevel,
+                          "image": self.songcardname}
+
+            self.allcharts.append(chart_dict)
+
         else:
+
             if tolvl:
                 int_tolvl = int(tolvl)
             else:
@@ -88,6 +76,7 @@ class RandomizerButton(QObject):
 
             int_fromlvl = int(fromlvl)
             int_n_songs = int(n_songs)
+            self.nsongs = int_n_songs
 
             if int_tolvl is not None and int_fromlvl > int_tolvl:
                 self.error_minovermax.emit()
@@ -98,34 +87,49 @@ class RandomizerButton(QObject):
                 "level": int_fromlvl,
                 "maxlevel": int_tolvl,
                 "maxlevelflag": maxlevel,
-                "n_songs": int_n_songs,
             }
 
-            self.random_chart = randomize_chart(json_all, mf, subsettings)
+            for i in range(int_n_songs):
+                self.random_chart = randomize_chart(json_all, mf, subsettings)
 
-            if self.random_chart is None:
-                self.error_nolevel.emit()
-                return
+                if self.random_chart is None:
+                    self.error_nolevel.emit()
+                    return
 
-        imageurl = self.random_chart["song"]["imagePath"]
-        if not offlinemode:
-            download_image(self.random_chart, output_dir)
+                imageurl = self.random_chart["song"]["imagePath"]
+                if not offlinemode:
+                    download_image(self.random_chart, output_dir)
 
-        self.songcardname = Path(imageurl).name
-        self.songlevel = self.random_chart["shorthand"]
+                self.songcardname = Path(imageurl).name
+                self.songlevel = self.random_chart["shorthand"]
 
-        # print(self.random_chart)
-        # print(imageurl)
-        # print(self.songcardname)
+                chart_dict = {"level": self.songlevel,
+                              "image": self.songcardname}
+
+                self.allcharts.append(chart_dict)
 
         self.randomize_over.emit()
 
     def assign_chart_to_image(self):
-        path_to_random = Path(f"api/appcache/songcards") / self.songcardname
-        self.imagechange.emit(str(path_to_random))
+        updated_charts = []
 
-        if "C" in self.songlevel:
-            final_label = f"Co-Op x {self.songlevel[-1]}"
-            self.levelchange.emit(str(final_label))
-        else:
-            self.levelchange.emit(str(self.songlevel))
+        for chart in self.allcharts:
+            path_to_random = Path(
+                f"api/appcache/songcards") / chart["image"]
+
+            if "C" in chart["level"]:
+                final_label = f"Co-Op x {chart["level"][-1]}"
+            else:
+                final_label = chart["level"]
+
+            updated_charts.append({
+                "image": path_to_random,
+                "level": final_label
+            })
+
+        print(updated_charts)
+
+        self.newcharts_ok.emit(updated_charts)
+
+        # self.imagechange.emit(image_paths)
+        # self.levelchange.emit(levels)
