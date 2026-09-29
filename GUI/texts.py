@@ -65,6 +65,15 @@ stylesheets = {
                 padding: 10px;
                 border-radius: 10px;
             }
-            """
-
+            """,
+    "randomize": """
+            QPushButton {
+                color: white;
+                background-color: blue;
+                font-size: 30px;
+                font-weight: bold;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            """,
 }

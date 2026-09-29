@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         # =========================
         # Menu bar
         # =========================
-        self.setWindowTitle("Pump it Up - Song Randomizer")
+        self.setWindowTitle("Pump it Up - Song Chart Randomizer")
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("File")
 
@@ -110,6 +110,22 @@ class MainWindow(QMainWindow):
             self.layout_songart.addWidget(self.song_images[i], row * 2, col)
             self.layout_songart.addWidget(
                 self.song_levels[i], row * 2 + 1, col)
+
+        self.layout_songart.setColumnStretch(0, 1)
+        self.layout_songart.setColumnStretch(1, 0)
+
+        self.song_images[0].set_image("cover.png")
+        self.song_images[0].show()
+
+        self.song_levels[0].setText(
+            "Choose your settings and press 'Randomize' to start!")
+        self.song_levels[0].show()
+
+        for image in self.song_images[1:]:
+            image.hide()
+
+        for level in self.song_levels[1:]:
+            level.hide()
 
         # *************************
         # Song Card Art /Level Triggers
@@ -215,6 +231,7 @@ class MainWindow(QMainWindow):
         # randomizer = RandomizerButton()
 
         wg_button = QPushButton("Randomize!")
+        wg_button.setStyleSheet(stylesheets["randomize"])
 
         layout_button.addWidget(wg_button)
 
@@ -430,6 +447,8 @@ class MainWindow(QMainWindow):
             level.hide()
 
         if len(charts) == 1:
+            self.layout_songart.setColumnStretch(0, 1)
+            self.layout_songart.setColumnStretch(1, 0)
 
             image = self.song_images[0]
             level = self.song_levels[0]
@@ -446,6 +465,9 @@ class MainWindow(QMainWindow):
             level.show()
 
         else:
+
+            self.layout_songart.setColumnStretch(0, 1)
+            self.layout_songart.setColumnStretch(1, 1)
 
             for i, chart in enumerate(charts):
 
@@ -536,6 +558,7 @@ class ImageLabel(QLabel):
         )
 
         self.setPixmap(scaled)
+        self.setAlignment(Qt.AlignCenter)
 
     # Important: don't let the original image dictate
     # the minimum size of the window.

@@ -34,7 +34,9 @@ class RandomizerButton(QObject):
             APPCACHE_DIR = Path("api/appcache/songcards")
             output_dir = APPCACHE_DIR
             output_dir.parent.mkdir(parents=True, exist_ok=True)
-            get_charts_info()
+            output_cache = Path(f"api/appcache/dump_all.json")
+            if not output_cache:
+                get_charts_info()
 
         if mode == "Co-Op":
             CoOp_flag = "CoOp"
