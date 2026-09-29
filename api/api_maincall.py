@@ -1,6 +1,7 @@
 import requests
 import json
 from pathlib import Path
+import base64
 
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from PySide6.QtCore import QObject, Signal
@@ -8,19 +9,30 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-BASE_URL = "https://piuscores.arroweclip.se"  # Website
+BASE_URL = "https://piuscores.arroweclip.se"
+TOKEN_PATH = Path("api/appcache/token.txt")
+
+
+def get_token():
+    if not TOKEN_PATH.exists():
+        return None
+
+    return TOKEN_PATH.read_text(encoding="utf-8").strip()
+
 
 # ===================================================
-# My token, needs to be replaced later
-TOKEN = "OjQ1YzU5YjQ4LTZjODctNGRjMi05NDY2LTlmYjUzM2ZlODQ3MQ=="
-HEADERS = {
-    "Authorization": f"Basic {TOKEN}",
-    "Accept": "*/*",
-}
+# # My token, needs to be replaced later
+# TOKEN = "45c59b48-6c87-4dc2-9466-9fb533fe8471"
+# basic = base64.b64encode(f":{TOKEN}".encode()).decode()
+# HEADERS = {
+#     "Authorization": f"Basic {basic}",
+#     "Accept": "*/*",
+# }
 
 # ===================================================
 
-APPCACHE_DIR = Path("api/appcache/songcards")
+APPCACHE_DIR = Path("api/appcache")
+SONGS_DIR = Path(APPCACHE_DIR / "songcards")
 
 
 # Create this once, reuse across all workers
@@ -46,8 +58,17 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
         level      : int (1 to 29)
         count      : Max number of charts to fetch from the API
     """
+
     # Build dictionaty with information of charts retrieved
     # Max charts logic
+
+    TOKEN = get_token()
+    basic = base64.b64encode(f":{TOKEN}".encode()).decode()
+    HEADERS = {
+        "Authorization": f"Basic {basic}",
+        "Accept": "*/*",
+    }
+
     if count:
         params = {"Count": max_count}
     else:
@@ -61,12 +82,27 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     if level is not None:
         params["Level"] = level
 
-    # API request
-    response = requests.get(
-        f"{BASE_URL}/api/charts",
-        headers=HEADERS,
-        params=params
-    )
+    # # API request
+    try:
+        response = _session.get(
+            f"{BASE_URL}/api/charts",
+            headers=HEADERS,
+            params=params,
+            timeout=10,
+        )
+
+    except requests.ConnectionError:
+        print("Could not connect to the remote server.")
+
+        return None
+
+    except requests.Timeout:
+        print("The remote server took too long to respond.")
+        return None
+
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
     # Check API status
     print(f"Status : {response.status_code}")
@@ -74,9 +110,9 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
 
     # Output dir
     if not chart_type:
-        output_file = Path(f"api/appcache/dump_all.json")
+        output_file = Path(APPCACHE_DIR / "dump_all.json")
     else:
-        output_file = Path(f"api/appcache/dump_{chart_type}.json")
+        output_file = Path(APPCACHE_DIR / "dump_{chart_type}.json")
 
     # Retrieval if API ok
     if response.ok:
@@ -154,11 +190,12 @@ def delete_cache():
     Deletes saved cache in cache folder
     """
 
-    output_dir = APPCACHE_DIR
-
-    for songcard in output_dir.iterdir():
+    for songcard in SONGS_DIR.iterdir():
         if songcard.name.endswith(".png") or songcard.name.endswith(".cache"):
             songcard.unlink()
+    for token in APPCACHE_DIR.iterdir():
+        if token.name.endswith(".txt") or token.name.endswith(".json"):
+            token.unlink()
 
 
 class CacheWorker(QObject):
@@ -174,7 +211,7 @@ class CacheWorker(QObject):
     def run(self):
         try:
             charts = load_json(self.json_file)
-            output_dir = APPCACHE_DIR
+            output_dir = SONGS_DIR
             output_dir.parent.mkdir(parents=True, exist_ok=True)
 
             results = charts["results"]
@@ -212,7 +249,7 @@ class CacheWorker(QObject):
                         self.status.emit(completed, total)
                         self.progress.emit(progress)
 
-            (APPCACHE_DIR/".cache").touch()
+            (SONGS_DIR / ".cache").touch()
             self.finished.emit()
 
         except Exception as e:

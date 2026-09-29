@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QLabel, QSizePolicy
-from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog
+from PySide6.QtWidgets import QMainWindow, QLabel, QFrame, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog, QFormLayout
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QThread
 
@@ -33,8 +33,7 @@ class MainWindow(QMainWindow):
         # =========================
         self.cache_flag = Path("api/appcache/songcards/.cache")
         self.json_dump = Path("api/appcache/dump_all.json")
-
-        # layout_cache = QHBoxLayout()
+        self.token = Path("api/appcache/token.txt")
 
         cacheSubMenu = fileMenu.addMenu("Cache")
         cacheReloadCache = cacheSubMenu.addAction("Reload song cards cache")
@@ -43,7 +42,14 @@ class MainWindow(QMainWindow):
         self.cacheProgressBar = QProgressBar()
         self.cacheProgressBar.setRange(0, 100)
 
-        # layout_cache.addWidget(self.cacheProgressBar)
+        # =========================
+        # User section
+        # =========================
+
+        userMenu = menubar.addMenu("User")
+        APISubMenu = userMenu.addAction("API Key Configuration")
+
+        self.API_dialog = APITokenWindow(self)
 
         # =========================
         # Exit, Help and About section
@@ -64,13 +70,17 @@ class MainWindow(QMainWindow):
         cacheReloadCache.triggered.connect(self.cacheReload_yes_no)
         cacheDeleteCache.triggered.connect(self.cacheDelete_yes_no)
 
+        APISubMenu.triggered.connect(self.API_dialog.exec)
+# ==========================================================================================================================================================
         # =========================
         # Central widget and main layout
         # =========================
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QGridLayout(central_widget)
+        main_layout.setColumnStretch(0, 0.2)
+        main_layout.setColumnStretch(1, 3)
 
         self.randomizer = RandomizerButton()
 
@@ -136,39 +146,68 @@ class MainWindow(QMainWindow):
 
         self.randomizer.newcharts_ok.connect(self.update_song_cards)
 
+# ==========================================================================================================================================================
         # =========================
         # Main settings: Mode, Levels
         # =========================
+        layout_MainSettings = QVBoxLayout()
+        layout_MainSettings.setAlignment(Qt.AlignTop)
 
-        layout_MainSettings = QHBoxLayout()
+        self.separator1 = QFrame()
+        self.separator1.setFrameShape(QFrame.HLine)
+        self.separator1.setFrameShadow(QFrame.Sunken)
 
-        wg_modetext = QLabel("Mode")
+        layout_MainH1 = QHBoxLayout()
+        layout_MainH2 = QHBoxLayout()
+
+        wg_mainsettingstitle = QLabel("Main Settings")
+        wg_mainsettingstitle.setFixedHeight(50)
+        wg_mainsettingstitle.setStyleSheet(stylesheets["MainSettings"])
+        wg_mainsettingstitle.setAlignment(Qt.AlignCenter)
+
+        wg_modetext = QLabel("Step Type")
+        wg_modetext.setAlignment(Qt.AlignLeft)
 
         self.wg_mode = QComboBox()
+        self.wg_mode.setFixedWidth(200)
         self.wg_mode.addItems(["Single", "Double", "Co-Op"])
 
-        self.wg_coop_text = QLabel("Co-Op players")
+        self.wg_coop_text = QLabel("# Co-Op players")
         self.wg_coop_players = QComboBox()
         self.wg_coop_players.addItems(["any", "2", "3", "4", "5"])
         self.wg_coop_players.setEnabled(False)
 
-        self.wg_leveltext = QLabel("From Level")
-
+        self.wg_leveltext = QLabel("Min Level")
         self.wg_level_from = QLineEdit(maxLength=2)
-
-        self.wg_checkbox_intervals = QCheckBox("To Level")
-
+        self.wg_level_from.setFixedWidth(45)
+        self.wg_checkbox_intervals = QCheckBox("Max Level")
         self.wg_level_to = QLineEdit(maxLength=2)
+        self.wg_level_to.setFixedWidth(45)
         self.wg_level_to.setEnabled(False)
 
-        layout_MainSettings.addWidget(wg_modetext)
-        layout_MainSettings.addWidget(self.wg_mode)
-        layout_MainSettings.addWidget(self.wg_coop_text)
-        layout_MainSettings.addWidget(self.wg_coop_players)
-        layout_MainSettings.addWidget(self.wg_leveltext)
-        layout_MainSettings.addWidget(self.wg_level_from)
-        layout_MainSettings.addWidget(self.wg_checkbox_intervals)
-        layout_MainSettings.addWidget(self.wg_level_to)
+        self.wg_cardsperdrawtext = QLabel("Number of\nRandom Songs")
+        self.wg_cardsperdrawtext.setAlignment(Qt.AlignRight)
+
+        self.wg_numberofcards = QComboBox()
+        self.wg_numberofcards.addItems(["1", "2", "3", "4"])
+
+        layout_MainH1.addWidget(wg_modetext)
+        layout_MainH1.addWidget(self.wg_mode)
+        layout_MainH1.addWidget(self.wg_coop_text)
+        layout_MainH1.addWidget(self.wg_coop_players)
+
+        layout_MainH2.addWidget(self.wg_leveltext)
+        layout_MainH2.addWidget(self.wg_level_from)
+        layout_MainH2.addWidget(self.wg_checkbox_intervals)
+        layout_MainH2.addWidget(self.wg_level_to)
+
+        layout_MainH2.addWidget(self.wg_cardsperdrawtext)
+        layout_MainH2.addWidget(self.wg_numberofcards)
+
+        layout_MainSettings.addWidget(wg_mainsettingstitle)
+        layout_MainSettings.addWidget(self.separator1)
+        layout_MainSettings.addLayout(layout_MainH1)
+        layout_MainSettings.addLayout(layout_MainH2)
 
         # *************************
         # Main Settings Triggers
@@ -178,23 +217,29 @@ class MainWindow(QMainWindow):
             self.activate_maxlevel)
         self.wg_mode.currentTextChanged.connect(self.activate_coop_players)
 
+# ==========================================================================================================================================================
         # =========================
         # Sub settings: Song category, number of cards
         # =========================
+        layout_SecSettingsV = QVBoxLayout()
+        layout_SecSettingsH1 = QHBoxLayout()
+        layout_SecSettingsH2 = QHBoxLayout()
 
-        layout_SecSettings = QHBoxLayout()
+        # layout_SecSettingsH1.setAlignment(Qt.AlignTop)
 
-        self.wg_cardsperdrawtext = QLabel("# of Songs")
-        self.wg_cardsperdrawtext.setAlignment(Qt.AlignRight)
-
-        self.wg_numberofcards = QComboBox()
-        self.wg_numberofcards.addItems(["1", "2", "3", "4"])
+        self.wg_secsettingstitle = QLabel("Extra Filters")
+        self.wg_secsettingstitle.setStyleSheet(stylesheets["SecSettings"])
+        self.wg_secsettingstitle.setAlignment(Qt.AlignCenter)
+        self.wg_secsettingstitle.setFixedHeight(35)
 
         self.wg_songtypestext = QLabel("Song Types")
         self.wg_arcade_checkbox = QCheckBox("Arcade")
         self.wg_shortcut_checkbox = QCheckBox("Shorcut")
         self.wg_fullsong_checkbox = QCheckBox("Full Song")
         self.wg_remix_checkbox = QCheckBox("Remix")
+
+        self.wg_reset_button = QPushButton("Reset to default")
+        self.wg_reset_button.clicked.connect(self.reset_defaults)
 
         self.wg_offlinemode_text = QLabel("Offline mode")
         self.wg_offlinemode_text.setStyleSheet("""
@@ -207,15 +252,25 @@ class MainWindow(QMainWindow):
             """)
         self.wg_offlinemode = QCheckBox()
 
-        layout_SecSettings.addWidget(self.wg_cardsperdrawtext)
-        layout_SecSettings.addWidget(self.wg_numberofcards)
-        layout_SecSettings.addWidget(self.wg_songtypestext)
-        layout_SecSettings.addWidget(self.wg_arcade_checkbox)
-        layout_SecSettings.addWidget(self.wg_shortcut_checkbox)
-        layout_SecSettings.addWidget(self.wg_fullsong_checkbox)
-        layout_SecSettings.addWidget(self.wg_remix_checkbox)
-        layout_SecSettings.addWidget(self.wg_offlinemode_text)
-        layout_SecSettings.addWidget(self.wg_offlinemode)
+        self.separator2 = QFrame()
+        self.separator2.setFrameShape(QFrame.HLine)
+        self.separator2.setFrameShadow(QFrame.Sunken)
+
+        layout_SecSettingsH1.addWidget(self.wg_songtypestext)
+        layout_SecSettingsH1.addWidget(self.wg_arcade_checkbox)
+        layout_SecSettingsH1.addWidget(self.wg_shortcut_checkbox)
+        layout_SecSettingsH1.addWidget(self.wg_fullsong_checkbox)
+        layout_SecSettingsH1.addWidget(self.wg_remix_checkbox)
+
+        layout_SecSettingsH2.addWidget(self.wg_reset_button)
+        layout_SecSettingsH2.addWidget(self.wg_offlinemode_text)
+        layout_SecSettingsH2.addWidget(self.wg_offlinemode)
+        layout_SecSettingsH2.setAlignment(Qt.AlignCenter)
+
+        layout_SecSettingsV.addWidget(self.wg_secsettingstitle)
+        layout_SecSettingsV.addWidget(self.separator2)
+        layout_SecSettingsV.addLayout(layout_SecSettingsH1)
+        layout_SecSettingsV.addLayout(layout_SecSettingsH2)
 
         # *************************
         # Sub Settings Triggers
@@ -223,7 +278,45 @@ class MainWindow(QMainWindow):
 
         self.wg_offlinemode.toggled.connect(
             self.check_change_internet)
+# ==========================================================================================================================================================
+        # =========================
+        # Predefined Settings:
+        # =========================
 
+        layout_pred_setting = QVBoxLayout()
+        self.layout_pred_settingH1 = QHBoxLayout()
+        self.layout_pred_settingH1.setAlignment(Qt.AlignCenter)
+
+        self.wg_pred_settings_title = QLabel("Predefined Settings")
+        self.wg_pred_settings_title.setStyleSheet(stylesheets["SecSettings"])
+        self.wg_pred_settings_title.setAlignment(Qt.AlignCenter)
+        self.wg_pred_settings_title.setFixedHeight(35)
+
+        self.wg_pred_settings_checkbox = QCheckBox()
+
+        self.wg_pred_settings_cb = QComboBox()
+        self.wg_pred_settings_cb.addItems(["Tournament - Single and Double round",
+                                           "Tournament - Best of 3 Round",
+                                           "Tournament - Best of 5 Round",
+                                           "1 Normal Credit (3 Arcade Songs)",
+                                           "1 Premium Credit (5 Arcade Songs)"])
+        self.wg_pred_settings_cb.setEnabled(False)
+
+        self.layout_pred_settingH1.addWidget(self.wg_pred_settings_checkbox)
+        self.layout_pred_settingH1.addWidget(self.wg_pred_settings_cb)
+
+        layout_pred_setting.addWidget(self.wg_pred_settings_title)
+        layout_pred_setting.addLayout(self.layout_pred_settingH1)
+
+        # *************************
+        # Predefined Settings Triggers
+        # *************************
+
+        self.wg_pred_settings_checkbox.checkStateChanged.connect(
+            self.activate_pred_settings)
+
+
+# ==========================================================================================================================================================
         # =========================
         # Randomize button execution
         # =========================
@@ -263,14 +356,22 @@ class MainWindow(QMainWindow):
                                                                               "Chart not found",
                                                                               "No charts were found. Please try different value(s) and/or filters."))
 
+# ==========================================================================================================================================================
         # =========================
         # Add all layouts to Main Layout
         # =========================
-        main_layout.addLayout(self.layout_songart)
-        main_layout.addLayout(layout_MainSettings)
-        main_layout.addLayout(layout_SecSettings)
-        main_layout.addLayout(layout_button)
-        # main_layout.addLayout(layout_cache)
+
+        setting_layout = QVBoxLayout()
+        setting_layout.addLayout(layout_MainSettings)
+        setting_layout.addLayout(layout_SecSettingsV)
+        setting_layout.addLayout(layout_pred_setting)
+
+        setting_layout.addStretch()
+
+        setting_layout.addLayout(layout_button)
+
+        main_layout.addLayout(setting_layout, 0, 0)
+        main_layout.addLayout(self.layout_songart, 0, 1)
 
         self.setLayout(main_layout)
         self.first_time_cache()
@@ -287,16 +388,37 @@ class MainWindow(QMainWindow):
             return
 
         if not self.cache_flag.exists():
-            self.cache_flag = QMessageBox.question(
+            cache_answer = QMessageBox.question(
                 self, "No Cache found", cacheText["FirstTime"])
 
-        if self.cache_flag != QMessageBox.Yes:
+        if cache_answer != QMessageBox.Yes:
             return
+
         else:
-            get_charts_info(chart_type="Single")
-            get_charts_info(chart_type="Double")
-            get_charts_info()
-            jsondump_forsongcard = Path("api/appcache/dump_Single.json")
+
+            api_flag = self.no_API_key_window()
+
+            if not api_flag:
+                QMessageBox.warning(
+                    self,
+                    "Connection failed",
+                    "Could not access the remote server.\n\n"
+                    "Please check your API key and try again."
+                )
+                return
+
+            data = get_charts_info()
+
+            if data is None:
+                QMessageBox.warning(
+                    self,
+                    "Connection failed",
+                    "Could not access the remote server.\n\n"
+                    "Please check your internet connection or API key and try again."
+                )
+                return
+
+            jsondump_forsongcard = Path("api/appcache/dump_all.json")
 
             # Keep references alive
             self.cache_dialog = CacheDialog(self)
@@ -339,10 +461,30 @@ class MainWindow(QMainWindow):
         if cache_answer != QMessageBox.Yes:
             return
 
-        get_charts_info(chart_type="Single")
-        get_charts_info(chart_type="Double")
-        get_charts_info()
-        jsondump_forsongcard = Path("api/appcache/dump_Single.json")
+        if not self.token:
+            api_flag = self.no_API_key_window()
+
+            if not api_flag:
+                QMessageBox.warning(
+                    self,
+                    "Connection failed",
+                    "Could not access the remote server.\n\n"
+                    "Please check your API key and try again."
+                )
+                return
+
+        data = get_charts_info()
+
+        if data is None:
+            QMessageBox.warning(
+                self,
+                "Connection failed",
+                "Could not access the remote server.\n\n"
+                "Please check your internet connection and try again."
+            )
+            return
+
+        jsondump_forsongcard = Path("api/appcache/dump_all.json")
 
         # Keep references alive
         self.cache_dialog = CacheDialog(self)
@@ -373,7 +515,9 @@ class MainWindow(QMainWindow):
 
         # Finish
         if self.cache_dialog.finished:
+            self.wg_offlinemode.blockSignals(True)
             self.wg_offlinemode.setChecked(True)
+            self.wg_offlinemode.blockSignals(False)
             self.rel_cache_confirmation = QMessageBox.information(
                 self, "Reload Cache", "Song cards updated successfully!")
 
@@ -502,11 +646,161 @@ class MainWindow(QMainWindow):
         else:
             label.setStyleSheet(stylesheets["defaultLevel"])
 
+    def no_API_key_window(self):
+        self.API_dialog.exec()
+
+        token_path = Path("api/appcache/token.txt")
+
+        if not token_path.exists():
+            self.token_not_ok = QMessageBox.information(self,
+                                                        "API Token",
+                                                        "You haven't input a token. Cache download cannot proceed.")
+            return None
+
+        token = token_path.read_text(encoding="utf-8").strip()
+
+        if not token:
+            return None
+
+        return token
+
+    def reset_defaults(self):
+        self.wg_mode.setCurrentIndex(0)
+        self.wg_coop_players.setCurrentIndex(0)
+        self.wg_level_from.clear()
+        self.wg_level_to.clear()
+        self.wg_numberofcards.setCurrentIndex(0)
+        self.wg_arcade_checkbox.setChecked(False)
+        self.wg_remix_checkbox.setChecked(False)
+        self.wg_fullsong_checkbox.setChecked(False)
+        self.wg_shortcut_checkbox.setChecked(False)
+        self.wg_checkbox_intervals.setChecked(False)
+
+    def deactivate_by_pred(self):
+        self.wg_mode.setEnabled(False)
+        self.wg_coop_players.setEnabled(False)
+        self.wg_level_from.setEnabled(False)
+        self.wg_level_to.setEnabled(False)
+        self.wg_numberofcards.setEnabled(False)
+        self.wg_arcade_checkbox.setEnabled(False)
+        self.wg_remix_checkbox.setEnabled(False)
+        self.wg_fullsong_checkbox.setEnabled(False)
+        self.wg_shortcut_checkbox.setEnabled(False)
+        self.wg_checkbox_intervals.setEnabled(False)
+
+    def activate_by_pred(self):
+        self.wg_mode.setEnabled(True)
+        self.wg_coop_players.setEnabled(True)
+        self.wg_level_from.setEnabled(True)
+        self.wg_level_to.setEnabled(True)
+        self.wg_numberofcards.setEnabled(True)
+        self.wg_arcade_checkbox.setEnabled(True)
+        self.wg_remix_checkbox.setEnabled(True)
+        self.wg_fullsong_checkbox.setEnabled(True)
+        self.wg_shortcut_checkbox.setEnabled(True)
+        self.wg_checkbox_intervals.setEnabled(True)
+
+    def activate_pred_settings(self):
+        checkflag = self.wg_pred_settings_checkbox.isChecked()
+        if checkflag:
+            self.wg_pred_settings_cb.setEnabled(True)
+            self.deactivate_by_pred()
+        else:
+            self.wg_pred_settings_cb.setEnabled(False)
+            self.activate_by_pred()
+
 # ==============================================================================================================================================
 # ==============================================================================================================================================
 # ==============================================================================================================================================
 # ==============================================================================================================================================
 # ==============================================================================================================================================
+
+
+class APITokenWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        main_layout_APIsettings = QVBoxLayout()
+
+        layout_APIkey = QHBoxLayout()
+        self.API_info = QLabel("API Key:")
+        self.API_lineedit = QLineEdit()
+        layout_APIkey.addWidget(self.API_info)
+        layout_APIkey.addWidget(self.API_lineedit)
+
+        API_info = QLabel("Please copy here the API token that you can find inside your user profile from PIU scores.\n"
+                          "https://piuscores.arroweclip.se/Account -> API")
+
+        self.token_path = Path("api/appcache/token.txt")
+
+        layout_APIkey_buttons = QHBoxLayout()
+        layout_APIkey_buttons.setAlignment(Qt.AlignRight)
+
+        self.API_SaveButton = QPushButton("Save API key")
+        self.API_Clear = QPushButton("Clear API key")
+        self.API_Cancel = QPushButton("Close")
+
+        layout_APIkey_buttons.addWidget(self.API_SaveButton)
+        layout_APIkey_buttons.addWidget(self.API_Clear)
+        layout_APIkey_buttons.addWidget(self.API_Cancel)
+
+        main_layout_APIsettings.addLayout(layout_APIkey)
+        main_layout_APIsettings.addWidget(API_info)
+        main_layout_APIsettings.addLayout(layout_APIkey_buttons)
+
+        self.setLayout(main_layout_APIsettings)
+
+        self.setWindowTitle("API Settings")
+        self.resize(500, 100)
+
+        self.API_Cancel.clicked.connect(
+            self.API_closewindow)
+
+        self.API_Clear.clicked.connect(
+            self.API_cleartext)
+
+        self.API_SaveButton.clicked.connect(
+            self.API_savetoken)
+
+        # self.token_exists()
+        # self.block_text_ifAPI()
+        self.update_token_state()
+
+    def API_closewindow(self):
+        self.close()
+
+    def API_cleartext(self):
+        self.token_path.unlink(missing_ok=True)
+        self.API_lineedit.clear()
+        self.update_token_state()
+
+    def API_savetoken(self):
+        token = self.API_lineedit.text()
+
+        with open(self.token_path, "w", encoding="utf-8") as f:
+            f.write(token)
+
+        self.update_token_state()
+
+        self.token_ok_message = QMessageBox.information(self,
+                                                        "API Token",
+                                                        "Token updated successfully")
+        return self.token_path
+
+    def update_token_state(self):
+        if self.token_path.exists():
+            token = self.token_path.read_text(encoding="utf-8").strip()
+
+            if token:
+                masked = f"{token[:4]}{'*' * (len(token) - 8)}{token[-4:]}"
+                self.API_lineedit.setText(masked)
+                self.API_lineedit.setEnabled(False)
+                self.API_SaveButton.setEnabled(False)
+                return
+
+        self.API_lineedit.clear()
+        self.API_lineedit.setEnabled(True)
+        self.API_SaveButton.setEnabled(True)
 
 
 class CacheDialog(QDialog):
