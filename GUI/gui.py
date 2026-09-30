@@ -383,6 +383,13 @@ class MainWindow(QMainWindow):
 # ==========================================================================================================================================================
 
     def first_time_cache(self):
+
+        APPCACHE_DIR = Path("api/appcache")
+        SONGS_DIR = Path(APPCACHE_DIR / "songcards")
+
+        APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+        SONGS_DIR.mkdir(parents=True, exist_ok=True)
+        
         if self.cache_flag.exists():
             self.wg_offlinemode.setChecked(True)
             return

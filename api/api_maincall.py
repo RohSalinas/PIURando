@@ -61,6 +61,10 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
 
     # Build dictionaty with information of charts retrieved
     # Max charts logic
+    APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+    SONGS_DIR.mkdir(parents=True, exist_ok=True)
+
+
 
     TOKEN = get_token()
     basic = base64.b64encode(f":{TOKEN}".encode()).decode()
@@ -112,7 +116,7 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     if not chart_type:
         output_file = Path(APPCACHE_DIR / "dump_all.json")
     else:
-        output_file = Path(APPCACHE_DIR / "dump_{chart_type}.json")
+        output_file = Path(APPCACHE_DIR / f"dump_{chart_type}.json")
 
     # Retrieval if API ok
     if response.ok:
@@ -212,7 +216,7 @@ class CacheWorker(QObject):
         try:
             charts = load_json(self.json_file)
             output_dir = SONGS_DIR
-            output_dir.parent.mkdir(parents=True, exist_ok=True)
+            output_dir.mkdir(parents=True, exist_ok=True)
 
             results = charts["results"]
             total = len(results)
