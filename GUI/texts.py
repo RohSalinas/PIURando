@@ -24,6 +24,15 @@ cacheText = {
     "This requires internet connection (About 200MB the first time)."
 }
 
+menuText = {
+    "Settings1": "Tournament - Single and Double round",
+    "Settings2": "Tournament - Best of 3 Round",
+    "Settings3": "Tournament - Best of 5 Round",
+    "Settings4": "1 Normal Credit (3 Arcade Songs)",
+    "Settings5": "1 Premium Credit (5 Arcade Songs)",
+    "Settings6": "Custom Individual charts (Use left checkboxs)"
+}
+
 
 stylesheets = {
     "defaultLevel": """

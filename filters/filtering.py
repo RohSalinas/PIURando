@@ -35,6 +35,8 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
     true_filters = []
     filtered_results = []
 
+    print(categoryfilterdict)
+
     for category, filter in categoryfilterdict.items():
         if filter:
             true_filters.append(category)

@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QThread
 from api.api_functions import RandomizerButton
 from api.api_maincall import delete_cache, get_charts_info, CacheWorker
 
-from GUI.texts import cacheText, stylesheets
+from GUI.texts import cacheText, stylesheets, menuText
 from pathlib import Path
 
 
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         self.song_images = []
         self.song_levels = []
 
-        for i in range(4):
+        for i in range(6):
 
             image = ImageLabel()
 
@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
             self.song_images.append(image)
             self.song_levels.append(level)
 
-        for i in range(4):
+        for i in range(6):
 
             row = i // 2
             col = i % 2
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         layout_MainH1 = QHBoxLayout()
         layout_MainH2 = QHBoxLayout()
 
-        wg_mainsettingstitle = QLabel("Main Settings")
+        wg_mainsettingstitle = QLabel("Customize Settings")
         wg_mainsettingstitle.setFixedHeight(50)
         wg_mainsettingstitle.setStyleSheet(stylesheets["MainSettings"])
         wg_mainsettingstitle.setAlignment(Qt.AlignCenter)
@@ -189,7 +189,7 @@ class MainWindow(QMainWindow):
         self.wg_cardsperdrawtext.setAlignment(Qt.AlignRight)
 
         self.wg_numberofcards = QComboBox()
-        self.wg_numberofcards.addItems(["1", "2", "3", "4"])
+        self.wg_numberofcards.addItems(["1", "2", "3", "4", "5", "6"])
 
         layout_MainH1.addWidget(wg_modetext)
         layout_MainH1.addWidget(self.wg_mode)
@@ -214,7 +214,9 @@ class MainWindow(QMainWindow):
         # *************************
 
         self.wg_checkbox_intervals.checkStateChanged.connect(
-            self.activate_maxlevel)
+            lambda state: self.activate_maxlevel(
+                state, self.wg_level_to))
+
         self.wg_mode.currentTextChanged.connect(self.activate_coop_players)
 
 # ==========================================================================================================================================================
@@ -282,6 +284,8 @@ class MainWindow(QMainWindow):
         # =========================
         # Predefined Settings:
         # =========================
+        # ComboBox with options:
+        # =========================
 
         layout_pred_setting = QVBoxLayout()
         self.layout_pred_settingH1 = QHBoxLayout()
@@ -292,28 +296,90 @@ class MainWindow(QMainWindow):
         self.wg_pred_settings_title.setAlignment(Qt.AlignCenter)
         self.wg_pred_settings_title.setFixedHeight(35)
 
-        self.wg_pred_settings_checkbox = QCheckBox()
+        self.activate_predetermined_checkbox = QCheckBox()
 
-        self.wg_pred_settings_cb = QComboBox()
-        self.wg_pred_settings_cb.addItems(["Tournament - Single and Double round",
-                                           "Tournament - Best of 3 Round",
-                                           "Tournament - Best of 5 Round",
-                                           "1 Normal Credit (3 Arcade Songs)",
-                                           "1 Premium Credit (5 Arcade Songs)"])
-        self.wg_pred_settings_cb.setEnabled(False)
+        self.predetermined_settings_combobox = QComboBox()
+        self.predetermined_settings_combobox.addItems([
+            menuText["Settings1"],
+            menuText["Settings2"],
+            menuText["Settings3"],
+            menuText["Settings4"],
+            menuText["Settings5"],
+            menuText["Settings6"]
+        ])
+        self.predetermined_settings_combobox.setEnabled(False)
 
-        self.layout_pred_settingH1.addWidget(self.wg_pred_settings_checkbox)
-        self.layout_pred_settingH1.addWidget(self.wg_pred_settings_cb)
+        self.layout_pred_settingH1.addWidget(
+            self.activate_predetermined_checkbox)
+        self.layout_pred_settingH1.addWidget(
+            self.predetermined_settings_combobox)
 
         layout_pred_setting.addWidget(self.wg_pred_settings_title)
         layout_pred_setting.addLayout(self.layout_pred_settingH1)
+
+        # =========================
+        # Predefined widgets:
+        # =========================
+        self.predefined_rows = []
+
+        for i in range(6):
+            self.layout_pf = QHBoxLayout()
+
+            self.pf_row_active = QCheckBox()
+            self.pf_row_active.setEnabled(False)
+
+            self.pf_steptype_text = QLabel("Step Type")
+            self.pf_steptype = QComboBox()
+            self.pf_steptype.addItems(["Single", "Double"])
+            self.pf_steptype.setEnabled(False)
+
+            self.pf_minleveltext = QLabel("Min Level")
+            self.pf_minlevel = QLineEdit(maxLength=2)
+            self.pf_minlevel.setFixedWidth(45)
+            self.pf_minlevel.setEnabled(False)
+
+            self.pf_checkbox = QCheckBox("Max Level")
+            self.pf_checkbox.setEnabled(False)
+
+            self.pf_maxlevel = QLineEdit(maxLength=2)
+            self.pf_maxlevel.setFixedWidth(45)
+            self.pf_maxlevel.setEnabled(False)
+
+            self.pf_checkbox.checkStateChanged.connect(
+                lambda state, maxlevel=self.pf_maxlevel: self.activate_maxlevel(
+                    state, maxlevel))
+
+            self.layout_pf.addWidget(self.pf_row_active)
+            self.layout_pf.addWidget(self.pf_steptype_text)
+            self.layout_pf.addWidget(self.pf_steptype)
+            self.layout_pf.addWidget(self.pf_minleveltext)
+            self.layout_pf.addWidget(self.pf_minlevel)
+            self.layout_pf.addWidget(self.pf_checkbox)
+            self.layout_pf.addWidget(self.pf_maxlevel)
+
+            self.predefined_rows.append({
+                "active": self.pf_row_active,
+                "steptype": self.pf_steptype,
+                "layout": self.layout_pf,
+                "min": self.pf_minlevel,
+                "checkbox": self.pf_checkbox,
+                "max": self.pf_maxlevel,
+            })
+        for i in range(6):
+            layout_pred_setting.addLayout(self.predefined_rows[i]["layout"])
 
         # *************************
         # Predefined Settings Triggers
         # *************************
 
-        self.wg_pred_settings_checkbox.checkStateChanged.connect(
-            self.activate_pred_settings)
+            self.activate_predetermined_checkbox.checkStateChanged.connect(
+                self.activate_pred_settings)
+
+            self.activate_predetermined_checkbox.checkStateChanged.connect(
+                self.pred_menu_defaults)
+
+            self.predetermined_settings_combobox.currentTextChanged.connect(
+                self.pred_menu_defaults)
 
 
 # ==========================================================================================================================================================
@@ -328,33 +394,28 @@ class MainWindow(QMainWindow):
 
         layout_button.addWidget(wg_button)
 
-        wg_button.clicked.connect(lambda: self.randomizer.randomize_button(self.json_dump,
-                                                                           self.wg_mode.currentText(),
-                                                                           self.wg_level_from.text(),
-                                                                           self.wg_level_to.text(),
-                                                                           self.wg_numberofcards.currentText(
-                                                                           ),
-                                                                           {
-                                                                               "arcade": self.wg_arcade_checkbox.isChecked(),
-                                                                               "shortcut": self.wg_shortcut_checkbox.isChecked(),
-                                                                               "fullsong": self.wg_fullsong_checkbox.isChecked(),
-                                                                               "remix": self.wg_remix_checkbox.isChecked()
-                                                                           },
-                                                                           self.wg_coop_players.currentText(),
-                                                                           self.wg_checkbox_intervals.isChecked(),
-                                                                           offlinemode=self.wg_offlinemode.isChecked()
-                                                                           )
-                                  )
+        wg_button.clicked.connect(self.on_randomizer_event)
 
         self.randomizer.error_nominlvl.connect(lambda: QMessageBox.information(self,
                                                                                "Minimum level missing",
                                                                                "Please input a minimum song level for your search"))
+
         self.randomizer.error_minovermax.connect(lambda: QMessageBox.information(self,
                                                                                  "Max level too low",
                                                                                  "Your 'Max level' cannot be lower than your 'Min level'"))
+
+        self.randomizer.error_nomaxlevel_whentrue.connect(lambda: QMessageBox.information(self,
+                                                                                          "Maxium level missing",
+                                                                                          "You have the 'Max Level' filter activated. Please input a maximum song level for your search"))
+
         self.randomizer.error_nolevel.connect(lambda: QMessageBox.information(self,
                                                                               "Chart not found",
                                                                               "No charts were found. Please try different value(s) and/or filters."))
+
+        self.randomizer.error_notenoughcharts.connect(lambda requested, available: QMessageBox.information(self,
+                                                                                                           "Not enough charts",
+                                                                                                           f"While you asked for {requested} song cards, your filters give a total of {available} song cards.\n"
+                                                                                                           "Please change your maximum number of song cards requested"))
 
 # ==========================================================================================================================================================
         # =========================
@@ -389,7 +450,7 @@ class MainWindow(QMainWindow):
 
         APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
         SONGS_DIR.mkdir(parents=True, exist_ok=True)
-        
+
         if self.cache_flag.exists():
             self.wg_offlinemode.setChecked(True)
             return
@@ -544,13 +605,13 @@ class MainWindow(QMainWindow):
     def update_cacheProgressBar(self, value):
         self.cacheProgressBar.setValue(value)
 
-    def activate_maxlevel(self):
-        checkflag = self.wg_checkbox_intervals.isChecked()
-        if checkflag:
-            self.wg_level_to.setEnabled(True)
+    def activate_maxlevel(self, state, level_wg: QLineEdit):
+
+        if state == Qt.Checked:
+            level_wg.setEnabled(True)
         else:
-            self.wg_level_to.setEnabled(False)
-            self.wg_level_to.clear()
+            level_wg.setEnabled(False)
+            level_wg.clear()
 
     def activate_coop_players(self):
         checkflag = self.wg_mode.currentText()
@@ -696,25 +757,262 @@ class MainWindow(QMainWindow):
         self.wg_checkbox_intervals.setEnabled(False)
 
     def activate_by_pred(self):
+        print("Activating shit")
         self.wg_mode.setEnabled(True)
         self.wg_coop_players.setEnabled(True)
         self.wg_level_from.setEnabled(True)
-        self.wg_level_to.setEnabled(True)
+        self.wg_level_to.setEnabled(False)
         self.wg_numberofcards.setEnabled(True)
         self.wg_arcade_checkbox.setEnabled(True)
         self.wg_remix_checkbox.setEnabled(True)
         self.wg_fullsong_checkbox.setEnabled(True)
         self.wg_shortcut_checkbox.setEnabled(True)
-        self.wg_checkbox_intervals.setEnabled(True)
+        self.wg_checkbox_intervals.setEnabled(False)
+
+        for row in self.predefined_rows:
+            row["active"].setEnabled(False)
+            row["active"].setChecked(False)
+            row["steptype"].setEnabled(False)
+            row["min"].setEnabled(False)
+            row["max"].setEnabled(False)
+            row["checkbox"].setEnabled(False)
+            row["min"].setText("")
+            row["max"].setText("")
+            print("Desactivating row")
+
+    def pred_menu_defaults(self):
+
+        if not self.activate_predetermined_checkbox.isChecked():
+            return
+
+        checkflag = self.predetermined_settings_combobox.currentText()
+
+        if checkflag == menuText["Settings1"]:
+            for row in self.predefined_rows[2:]:
+                row["active"].setEnabled(False)
+                row["active"].setChecked(False)
+                row["steptype"].setEnabled(False)
+                row["min"].setEnabled(False)
+                row["min"].setText("")
+                row["max"].setEnabled(False)
+                row["max"].setText("")
+                row["checkbox"].setEnabled(False)
+                row["checkbox"].setChecked(False)
+
+            for row in self.predefined_rows[:2]:
+                row["active"].setChecked(True)
+                row["active"].setEnabled(False)
+
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+
+            self.predefined_rows[0]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[0]["min"].setText("17")
+
+            self.predefined_rows[1]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[1]["min"].setText("17")
+
+        if checkflag == menuText["Settings2"]:
+
+            for row in self.predefined_rows[3:]:
+                row["active"].setEnabled(False)
+                row["active"].setChecked(False)
+                row["steptype"].setEnabled(False)
+                row["min"].setEnabled(False)
+                row["min"].setText("")
+                row["max"].setEnabled(False)
+                row["max"].setText("")
+                row["checkbox"].setEnabled(False)
+                row["checkbox"].setChecked(False)
+
+            for row in self.predefined_rows[:3]:
+                row["active"].setChecked(True)
+                row["active"].setEnabled(False)
+
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+
+            self.predefined_rows[0]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[0]["min"].setText("20")
+
+            self.predefined_rows[1]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[1]["min"].setText("21")
+
+            self.predefined_rows[2]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[2]["min"].setText("22")
+
+        if checkflag == menuText["Settings3"]:
+            for row in self.predefined_rows[5:]:
+                row["active"].setEnabled(False)
+                row["active"].setChecked(False)
+                row["steptype"].setEnabled(False)
+                row["min"].setEnabled(False)
+                row["min"].setText("")
+                row["max"].setEnabled(False)
+                row["max"].setText("")
+                row["checkbox"].setEnabled(False)
+                row["checkbox"].setChecked(False)
+
+            for row in self.predefined_rows[:5]:
+                row["active"].setChecked(True)
+                row["active"].setEnabled(False)
+
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+
+            self.predefined_rows[0]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[0]["min"].setText("22")
+
+            self.predefined_rows[1]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[1]["min"].setText("22")
+
+            self.predefined_rows[2]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[2]["min"].setText("23")
+
+            self.predefined_rows[3]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[3]["min"].setText("24")
+
+            self.predefined_rows[4]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[4]["min"].setText("25")
+
+        if checkflag == menuText["Settings4"]:
+            for row in self.predefined_rows[3:]:
+                row["active"].setEnabled(False)
+                row["active"].setChecked(False)
+                row["steptype"].setEnabled(False)
+                row["min"].setEnabled(False)
+                row["min"].setText("")
+                row["max"].setEnabled(False)
+                row["max"].setText("")
+                row["checkbox"].setEnabled(False)
+                row["checkbox"].setChecked(False)
+
+            for row in self.predefined_rows[:3]:
+                row["active"].setChecked(True)
+                row["active"].setEnabled(False)
+
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+
+            self.predefined_rows[0]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[0]["min"].setText("19")
+
+            self.predefined_rows[1]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[1]["min"].setText("18")
+
+            self.predefined_rows[2]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[2]["min"].setText("20")
+
+        if checkflag == menuText["Settings5"]:
+            for row in self.predefined_rows[5:]:
+                row["active"].setEnabled(False)
+                row["active"].setChecked(False)
+                row["steptype"].setEnabled(False)
+                row["min"].setEnabled(False)
+                row["min"].setText("")
+                row["max"].setEnabled(False)
+                row["max"].setText("")
+                row["checkbox"].setEnabled(False)
+                row["checkbox"].setChecked(False)
+
+            for row in self.predefined_rows[:5]:
+                row["active"].setChecked(True)
+                row["active"].setEnabled(False)
+
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+
+            self.predefined_rows[0]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[0]["min"].setText("17")
+
+            self.predefined_rows[1]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[1]["min"].setText("18")
+
+            self.predefined_rows[2]["steptype"].setCurrentIndex(0)
+            self.predefined_rows[2]["min"].setText("19")
+
+            self.predefined_rows[3]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[3]["min"].setText("19")
+
+            self.predefined_rows[4]["steptype"].setCurrentIndex(1)
+            self.predefined_rows[4]["min"].setText("20")
+
+        if checkflag == menuText["Settings6"]:
+            for row in self.predefined_rows:
+                row["active"].setEnabled(True)
+                row["active"].setChecked(True)
+                row["steptype"].setEnabled(True)
+                row["min"].setEnabled(True)
+                row["max"].setEnabled(True)
+                row["checkbox"].setEnabled(True)
+                row["min"].setText("")
+                row["max"].setText("")
 
     def activate_pred_settings(self):
-        checkflag = self.wg_pred_settings_checkbox.isChecked()
+        checkflag = self.activate_predetermined_checkbox.isChecked()
         if checkflag:
-            self.wg_pred_settings_cb.setEnabled(True)
+            self.predetermined_settings_combobox.setEnabled(True)
             self.deactivate_by_pred()
         else:
-            self.wg_pred_settings_cb.setEnabled(False)
+            self.predetermined_settings_combobox.setEnabled(False)
             self.activate_by_pred()
+
+    def extract_current_pred_charts(self):
+        mode_types = []
+
+        for row in self.predefined_rows:
+
+            if row["active"].isChecked():
+
+                mode_types.append({
+                    "steptype": row["steptype"].currentText(),
+                    "min":      row["min"].text(),
+                    "checkbox": row["checkbox"].isChecked(),
+                    "max":      row["max"].text()}
+                )
+            else:
+                print("Ignoring row...")
+
+        print(mode_types)
+
+        return mode_types
+
+    def on_randomizer_event(self):
+
+        if not self.activate_predetermined_checkbox.isChecked():
+            self.randomizer.randomize_button(
+                self.json_dump,
+                self.wg_mode.currentText(),
+                self.wg_level_from.text(),
+                self.wg_level_to.text(),
+                self.wg_numberofcards.currentText(
+                ),
+                {
+                    "arcade": self.wg_arcade_checkbox.isChecked(),
+                    "shortcut": self.wg_shortcut_checkbox.isChecked(),
+                    "fullsong": self.wg_fullsong_checkbox.isChecked(),
+                    "remix": self.wg_remix_checkbox.isChecked()
+                },
+                self.wg_coop_players.currentText(),
+                self.wg_checkbox_intervals.isChecked(),
+                offlinemode=self.wg_offlinemode.isChecked()
+            )
+            return
+
+        else:
+
+            info = self.extract_current_pred_charts()
+            self.randomizer.randomize_button_predefined(
+                self.json_dump,
+                info,
+                len(info),
+                offlinemode=self.wg_offlinemode.isChecked()
+            )
 
 # ==============================================================================================================================================
 # ==============================================================================================================================================

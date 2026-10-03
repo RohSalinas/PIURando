@@ -27,7 +27,7 @@ def randomize_chart(json_data, main_filters, sub_filters):
         random_chart = random.choice(filterC)
         print(
             f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
-        return random_chart
+        return random_chart, None
 
     filter1 = filter_bytype(json_file, main_filters["type"])
 
@@ -36,11 +36,13 @@ def randomize_chart(json_data, main_filters, sub_filters):
 
     filter3 = filter_bycategory(filter2, sub_filters)
 
+    filter_len = len(filter3)
+
     if not filter3:
-        return None
+        return None,
 
     random_chart = random.choice(filter3)
     print(
         f"Song Selected: {random_chart["song"]["name"]} || Level: {random_chart["shorthand"]} ")
 
-    return random_chart
+    return random_chart, filter_len
