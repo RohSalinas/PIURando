@@ -1,0 +1,74 @@
+[
+    {
+        "id": "38999ff2-879c-4e88-acaf-526e91689a7f",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 5000,
+        "song": {
+            "name": "Appassionata",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Appassionata.png"
+        }
+    },
+    {
+        "id": "88d0ea18-d127-48fc-9f74-4c442386ae5e",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 1433,
+        "song": {
+            "name": "Tribe Attacker",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/TribeAttacker.png"
+        }
+    },
+    {
+        "id": "fe64732c-f359-406e-b974-a7beb67dad3a",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 1931,
+        "song": {
+            "name": "Bad Apple!! feat. Nomico - FULL SONG -",
+            "type": "FullSong",
+            "imagePath": "https://piuimages.arroweclip.se/songs/BadApplefeatNomicoFULLSONG.png"
+        }
+    },
+    {
+        "id": "4fe4b573-b6fc-4219-9dac-6a82f72f9cc7",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 2000,
+        "song": {
+            "name": "Heart Rabbit Coaster",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/HeartRabbitCoaster.png"
+        }
+    },
+    {
+        "id": "50f804e9-78e6-4cbd-995b-666d904a42bb",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 2000,
+        "song": {
+            "name": "Mental Rider",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/MentalRider.png"
+        }
+    },
+    {
+        "id": "42cde875-1977-499f-92aa-f66740885ec2",
+        "type": "CoOp",
+        "shorthand": "CoOp4",
+        "level": 4,
+        "noteCount": 3000,
+        "song": {
+            "name": "Feel My Happiness",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/FeelMyHappiness.png"
+        }
+    }
+]

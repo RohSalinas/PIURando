@@ -1,0 +1,266 @@
+[
+    {
+        "id": "0ec20b34-fd05-4e09-8425-ef79584dbd68",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3333,
+        "song": {
+            "name": "Clematis Rapsodia",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/ClematisRapsodia.png"
+        }
+    },
+    {
+        "id": "f7932728-79aa-4e74-b20d-76cf4645badc",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 4282,
+        "song": {
+            "name": "Energy Synergy Matrix",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/EnergySynergyMatrix.png"
+        }
+    },
+    {
+        "id": "09b75fad-b0aa-4817-9b89-3b0f1129e9dc",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 4000,
+        "song": {
+            "name": "Airplane",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Airplane.png"
+        }
+    },
+    {
+        "id": "bc11a240-ba06-4820-9d93-46c6d1a2ad98",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3239,
+        "song": {
+            "name": "Redline",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Redline.png"
+        }
+    },
+    {
+        "id": "75fafa4c-9db9-4df8-b665-42e5cf9eea69",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 5104,
+        "song": {
+            "name": "Take Out",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/TakeOut.png"
+        }
+    },
+    {
+        "id": "2d669b1e-54ff-4858-8ebd-44ae630018a7",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3615,
+        "song": {
+            "name": "Storm",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Storm.png"
+        }
+    },
+    {
+        "id": "03657405-354f-4375-8679-d911ef153b28",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3910,
+        "song": {
+            "name": "Allegro Furioso",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/AllegroFurioso.png"
+        }
+    },
+    {
+        "id": "a038f45c-d865-4405-8686-4cdb351e5e6d",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3559,
+        "song": {
+            "name": "Xeroize",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Xeroize.png"
+        }
+    },
+    {
+        "id": "512eefc7-e583-418e-887a-09523055f859",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 4300,
+        "song": {
+            "name": "Murdoch vs Otada",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/MurdochvsOtada.png"
+        }
+    },
+    {
+        "id": "62ba5089-b142-4d0b-a782-5224eb8120c1",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 2400,
+        "song": {
+            "name": "Cutie Song",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/CutieSong.png"
+        }
+    },
+    {
+        "id": "64b4f7ca-62a4-44b1-85e4-34c8cd8c70bc",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 4100,
+        "song": {
+            "name": "Tantanmen",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Tantanmen.png"
+        }
+    },
+    {
+        "id": "424ed4bb-dc7c-4c6c-907f-7304b6520b6a",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 2878,
+        "song": {
+            "name": "Tropicanic",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Tropicanic.png"
+        }
+    },
+    {
+        "id": "e0f8e65e-b8f3-4630-85c3-eb85925c68c8",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3748,
+        "song": {
+            "name": "We Got 2 Know",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/WeGot2Know.png"
+        }
+    },
+    {
+        "id": "f5c17f9e-7300-4154-ba96-acf7b48dd853",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3500,
+        "song": {
+            "name": "District 1",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/District1.png"
+        }
+    },
+    {
+        "id": "1aec3d53-b79e-481f-b612-ec65a2c1825d",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3526,
+        "song": {
+            "name": "INFINITY",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/INFINITY.png"
+        }
+    },
+    {
+        "id": "93947eb4-ee44-4d4f-b2b5-91dad91e83fe",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3060,
+        "song": {
+            "name": "FFF",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/FFF.png"
+        }
+    },
+    {
+        "id": "0b8cfc98-273a-4082-8c53-33bc96c89470",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3759,
+        "song": {
+            "name": "Chinese restaurant",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Chineserestaurant.png"
+        }
+    },
+    {
+        "id": "2ae9d05d-0de0-4621-995c-ced65f35bcc5",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 9958,
+        "song": {
+            "name": "Yog-Sothoth",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/YogSothoth.png"
+        }
+    },
+    {
+        "id": "b5546ccf-217a-42fa-a058-b2423cf4d5b5",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 4185,
+        "song": {
+            "name": "Avalanche",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Avalanche.png"
+        }
+    },
+    {
+        "id": "892f0c6a-86ff-4377-9a00-6f3bdfcb549b",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3700,
+        "song": {
+            "name": "Yo! Say!! Fairy!!!",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/YoSayFairy.png"
+        }
+    },
+    {
+        "id": "a324848e-e404-4b34-aae8-262502188c1b",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 2695,
+        "song": {
+            "name": "Wedding Crashers",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/WeddingCrashers.png"
+        }
+    },
+    {
+        "id": "6e94b9bc-500b-4376-958c-e717c2fb3bd0",
+        "type": "CoOp",
+        "shorthand": "CoOp3",
+        "level": 3,
+        "noteCount": 3778,
+        "song": {
+            "name": "Acquire",
+            "type": "Arcade",
+            "imagePath": "https://piuimages.arroweclip.se/songs/Acquire.png"
+        }
+    }
+]

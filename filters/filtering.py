@@ -1,4 +1,4 @@
-from api.api_maincall import load_json
+import json
 
 """
 Filters are applied from a mayor to a lower hierarchy.
@@ -63,7 +63,12 @@ def filter_coop(json_data, type, n_persons):
         return filtered_results  # List with dicts
     else:
         coop_n = f"{type}{n_persons}"
+
         for chart in filtered_results:
             if chart["shorthand"] == coop_n:
                 true_filters.append(chart)
+
+        with open(f"coop_{n_persons}players.json", "w", encoding="utf-8") as f:
+            json.dump(true_filters, f, indent=4)
+
         return true_filters

@@ -34,12 +34,15 @@ def randomize_chart(json_data, main_filters, sub_filters):
     filter2 = filter_bylevel(
         filter1, main_filters["level"], main_filters["maxlevel"], main_filters["maxlevelflag"])
 
+    print(filter2)
+    print(len(filter2))
+
     filter3 = filter_bycategory(filter2, sub_filters)
 
     filter_len = len(filter3)
 
     if not filter3:
-        return None,
+        return None, None
 
     random_chart = random.choice(filter3)
     print(
