@@ -68,7 +68,7 @@ def filter_coop(json_data, type, n_persons):
             if chart["shorthand"] == coop_n:
                 true_filters.append(chart)
 
-        with open(f"coop_{n_persons}players.json", "w", encoding="utf-8") as f:
-            json.dump(true_filters, f, indent=4)
+        # with open(f"coop_{n_persons}players.json", "w", encoding="utf-8") as f:
+        #     json.dump(true_filters, f, indent=4)
 
         return true_filters
