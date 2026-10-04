@@ -9,7 +9,7 @@ Type -> Level -> Category
 def filter_bytype(json_data, type):
     filtered_results = []
 
-    for chart in json_data["results"]:
+    for chart in json_data["data"]:
         if type == chart["type"]:
             filtered_results.append(chart)
     return filtered_results  # List with dicts
@@ -45,7 +45,8 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
         return filtered_listwdict  # List with dict
 
     for chart in filtered_listwdict:
-        if chart["song"]["type"].lower() in true_filters:
+        # if chart["song"]["type"].lower() in true_filters:
+        if chart["type"].lower() in true_filters:
             filtered_results.append(chart)
 
     return filtered_results  # List with dict
@@ -55,7 +56,7 @@ def filter_coop(json_data, type, n_persons):
     filtered_results = []
     true_filters = []
 
-    for chart in json_data["results"]:
+    for chart in json_data["data"]:
         if type == chart["type"]:
             filtered_results.append(chart)
 
@@ -65,7 +66,7 @@ def filter_coop(json_data, type, n_persons):
         coop_n = f"{type}{n_persons}"
 
         for chart in filtered_results:
-            if chart["shorthand"] == coop_n:
+            if chart["difficulty"] == coop_n:
                 true_filters.append(chart)
 
         # with open(f"coop_{n_persons}players.json", "w", encoding="utf-8") as f:

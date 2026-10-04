@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtWidgets import QLabel, QSizePolicy
+from PySide6.QtWidgets import QLabel, QSizePolicy, QApplication
 from PySide6.QtWidgets import QMainWindow, QLabel, QFrame, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog, QFormLayout
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QThread
 
 from api.api_functions import RandomizerButton
-from api.api_maincall import delete_cache, get_charts_info, CacheWorker
+from api.api_maincall import delete_cache, CacheWorker, get_charts_info_v2
 
 from GUI.texts import cacheText, stylesheets, menuText
 from pathlib import Path
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         # Cache Sub Menu
         # =========================
         self.cache_flag = Path("api/appcache/songcards/.cache")
-        self.json_dump = Path("api/appcache/dump_all.json")
+        self.json_dump = Path("api/appcache/dump_all_v2.json")
         self.token = Path("api/appcache/token.txt")
 
         cacheSubMenu = fileMenu.addMenu("Cache")
@@ -475,7 +475,26 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-            data = get_charts_info()
+            self.cache_gettingjson = QDialog(self)
+            self.cache_gettingjson.setWindowTitle("Reloading songs cache")
+            self.cache_gettingjson.setFixedSize(200, 75)
+
+            layout_gettingjson = QVBoxLayout(self.cache_gettingjson)
+            label = QLabel("Getting songs metadata...")
+            label.setAlignment(Qt.AlignCenter)
+            layout_gettingjson.addWidget(label)
+
+            self.cache_gettingjson.show()
+            self.cache_gettingjson.raise_()
+            self.cache_gettingjson.activateWindow()
+
+            for _ in range(3):
+                QApplication.processEvents()
+            self.cache_gettingjson.repaint()
+
+            data = get_charts_info_v2(mix="phoenix2")
+
+            self.cache_gettingjson.close()
 
             if data is None:
                 QMessageBox.warning(
@@ -486,7 +505,7 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-            jsondump_forsongcard = Path("api/appcache/dump_all.json")
+            jsondump_forsongcard = Path("api/appcache/dump_all_v2.json")
 
             # Keep references alive
             self.cache_dialog = CacheDialog(self)
@@ -541,7 +560,26 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-        data = get_charts_info()
+        self.cache_gettingjson = QDialog(self)
+        self.cache_gettingjson.setWindowTitle("Reloading songs cache")
+        self.cache_gettingjson.setFixedSize(200, 75)
+
+        layout_gettingjson = QVBoxLayout(self.cache_gettingjson)
+        label = QLabel("Getting songs metadata...")
+        label.setAlignment(Qt.AlignCenter)
+        layout_gettingjson.addWidget(label)
+
+        self.cache_gettingjson.show()
+        self.cache_gettingjson.raise_()
+        self.cache_gettingjson.activateWindow()
+
+        for _ in range(3):
+            QApplication.processEvents()
+        self.cache_gettingjson.repaint()
+
+        data = get_charts_info_v2(mix="phoenix2")
+
+        self.cache_gettingjson.close()
 
         if data is None:
             QMessageBox.warning(
@@ -552,7 +590,9 @@ class MainWindow(QMainWindow):
             )
             return
 
-        jsondump_forsongcard = Path("api/appcache/dump_all.json")
+        print("Before json check")
+        jsondump_forsongcard = Path("api/appcache/dump_all_v2.json")
+        print("After json check")
 
         # Keep references alive
         self.cache_dialog = CacheDialog(self)
@@ -594,7 +634,7 @@ class MainWindow(QMainWindow):
         if QMessageBox.question(self, "Delete Song Cards cache", cacheText["DeleteCache"]) == QMessageBox.Yes:
 
             print("Deleting")
-            delete_cache()
+            delete_cache(self.API_dialog)
             print("Finish deleting")
             self.def_cache_confirmation = QMessageBox.information(
                 self, "Delete Cache", "Song cards cache deleted successfully!")

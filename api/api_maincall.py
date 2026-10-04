@@ -48,7 +48,91 @@ _session.mount("https://", _adapter)
 _session.mount("http://", _adapter)
 
 
-def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_count=4):
+# def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_count=4):
+#     """
+#     Fetch charts from /api/charts with optional filters and save a dump JSON file.
+
+#     Parameters:
+#         mix        : Game version string, e.g. "Phoenix", "XX", "Fiesta2"
+#         chart_type : "Single" or "Double"
+#         level      : int (1 to 29)
+#         count      : Max number of charts to fetch from the API
+#     """
+
+#     # Build dictionaty with information of charts retrieved
+#     # Max charts logic
+#     APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+#     SONGS_DIR.mkdir(parents=True, exist_ok=True)
+
+#     TOKEN = get_token()
+#     basic = base64.b64encode(f":{TOKEN}".encode()).decode()
+#     HEADERS = {
+#         "Authorization": f"Basic {basic}",
+#         "Accept": "*/*",
+#     }
+
+#     if count:
+#         params = {"Count": max_count}
+#     else:
+#         params = {"Count": 99999}
+
+#     # Mix, type and level
+#     if mix:
+#         params["Mix"] = mix
+#     if chart_type:
+#         params["ChartType"] = chart_type
+#     if level is not None:
+#         params["Level"] = level
+
+#     # # API request
+#     try:
+#         response = _session.get(
+#             f"{BASE_URL}/api/charts",
+#             headers=HEADERS,
+#             params=params,
+#             timeout=10,
+#         )
+
+#     except requests.ConnectionError:
+#         print("Could not connect to the remote server.")
+
+#         return None
+
+#     except requests.Timeout:
+#         print("The remote server took too long to respond.")
+#         return None
+
+#     except requests.RequestException as e:
+#         print(f"Request failed: {e}")
+#         return None
+
+#     # Check API status
+#     print(f"Status : {response.status_code}")
+#     print(f"URL    : {response.url}\n")
+
+#     # Output dir
+#     if not chart_type:
+#         output_file = Path(APPCACHE_DIR / "dump_all.json")
+#     else:
+#         output_file = Path(APPCACHE_DIR / f"dump_{chart_type}.json")
+
+#     # Retrieval if API ok
+#     if response.ok:
+
+#         charts = response.json()
+
+#         if output_file:
+#             with open(output_file, "w", encoding="utf-8") as f:
+#                 json.dump(charts, f, indent=4, ensure_ascii=False)
+
+#         return response.json()
+
+#     else:
+#         print("Error response:", response.text)
+#         return None
+
+
+def get_charts_info_v2(mix=None, chart_type=None, level=None, count=False, max_count=4, status_callback=None):
     """
     Fetch charts from /api/charts with optional filters and save a dump JSON file.
 
@@ -64,8 +148,6 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
     APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
     SONGS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-
     TOKEN = get_token()
     basic = base64.b64encode(f":{TOKEN}".encode()).decode()
     HEADERS = {
@@ -73,65 +155,75 @@ def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_coun
         "Accept": "*/*",
     }
 
-    if count:
-        params = {"Count": max_count}
-    else:
-        params = {"Count": 99999}
+    params = {
+        "mix": mix,
+        "limit": 500,
+    }
 
-    # Mix, type and level
-    if mix:
-        params["Mix"] = mix
     if chart_type:
-        params["ChartType"] = chart_type
-    if level is not None:
-        params["Level"] = level
+        params["type"] = chart_type
 
-    # # API request
-    try:
-        response = _session.get(
-            f"{BASE_URL}/api/charts",
-            headers=HEADERS,
-            params=params,
-            timeout=10,
+    all_results = []
+    url = f"{BASE_URL}/api/v2/charts"
+
+    print(params)
+
+    while url:
+
+        if status_callback:
+            status_callback(
+                f"Retrieving chart data... {len(all_results)} / {data['total']}")
+
+        try:
+            response = _session.get(
+                url,
+                headers=HEADERS,
+                params=params,
+                timeout=10,
+            )
+
+        except requests.ConnectionError:
+            print("Could not connect to the remote server.")
+
+            return None
+
+        except requests.Timeout:
+            print("The remote server took too long to respond.")
+            return None
+
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+
+        print(f"Status : {response.status_code}")
+        print(f"URL    : {response.url}\n")
+
+        if not response.ok:
+            print("STATUS:", response.status_code)
+            print("RESPONSE:", response.text)
+            return None
+
+        data = response.json()
+        all_results.extend(data["data"])
+
+        print(
+            f"Downloaded {len(all_results)} / {data['total']}"
         )
 
-    except requests.ConnectionError:
-        print("Could not connect to the remote server.")
+        url = data.get("next")
+        params = None
 
-        return None
+    output = {
+        "data": all_results,
+        "total": len(all_results),
+    }
 
-    except requests.Timeout:
-        print("The remote server took too long to respond.")
-        return None
+    output_file = APPCACHE_DIR / "dump_all_v2.json"
 
-    except requests.RequestException as e:
-        print(f"Request failed: {e}")
-        return None
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=4, ensure_ascii=False)
 
-    # Check API status
-    print(f"Status : {response.status_code}")
-    print(f"URL    : {response.url}\n")
-
-    # Output dir
-    if not chart_type:
-        output_file = Path(APPCACHE_DIR / "dump_all.json")
-    else:
-        output_file = Path(APPCACHE_DIR / f"dump_{chart_type}.json")
-
-    # Retrieval if API ok
-    if response.ok:
-
-        charts = response.json()
-
-        if output_file:
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(charts, f, indent=4, ensure_ascii=False)
-
-        return response.json()
-
-    else:
-        print("Error response:", response.text)
-        return None
+    return output
 
 
 def load_json(file_path):
@@ -165,7 +257,7 @@ def download_image(chart, output_dir):
 
     """
 
-    image_url = chart["song"]["imagePath"]
+    image_url = chart["imageUrl"]
     filename = Path(image_url).name
 
     output_path = output_dir / filename
@@ -189,7 +281,7 @@ def download_image(chart, output_dir):
         return False
 
 
-def delete_cache():
+def delete_cache(apidialog):
     """
     Deletes saved cache in cache folder
     """
@@ -200,6 +292,8 @@ def delete_cache():
     for token in APPCACHE_DIR.iterdir():
         if token.name.endswith(".txt") or token.name.endswith(".json"):
             token.unlink()
+
+    apidialog.update_token_state()
 
 
 class CacheWorker(QObject):
@@ -218,7 +312,8 @@ class CacheWorker(QObject):
             output_dir = SONGS_DIR
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            results = charts["results"]
+            # results = charts["results"]
+            results = charts["data"]
             total = len(results)
             completed = 0
             cancelled = False

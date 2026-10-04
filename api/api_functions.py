@@ -2,7 +2,7 @@ from filters.randsong import randomize_chart
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
-from api.api_maincall import get_charts_info, download_image
+from api.api_maincall import download_image, get_charts_info_v2
 
 
 class RandomizerButton(QObject):
@@ -38,9 +38,10 @@ class RandomizerButton(QObject):
             APPCACHE_DIR = Path("api/appcache/songcards")
             output_dir = APPCACHE_DIR
             output_dir.parent.mkdir(parents=True, exist_ok=True)
-            output_cache = Path(f"api/appcache/dump_all.json")
+            output_cache = Path(f"api/appcache/dump_all_v2.json")
             if not output_cache:
-                get_charts_info()
+                # get_charts_info()
+                get_charts_info_v2(mix="phoenix2")
 
         if mode == "Co-Op":
             CoOp_flag = "CoOp"
@@ -58,12 +59,14 @@ class RandomizerButton(QObject):
                 self.error_nolevel.emit()
                 return
 
-            imageurl = self.random_chart["song"]["imagePath"]
+            # imageurl = self.random_chart["song"]["imagePath"]
+            imageurl = self.random_chart["imageUrl"]
             if not offlinemode:
                 download_image(self.random_chart, output_dir)
 
             self.songcardname = Path(imageurl).name
-            self.songlevel = self.random_chart["shorthand"]
+            # self.songlevel = self.random_chart["shorthand"]
+            self.songlevel = self.random_chart["difficulty"]
 
             chart_dict = {"level": self.songlevel,
                           "image": self.songcardname}
@@ -118,12 +121,13 @@ class RandomizerButton(QObject):
                             int_n_songs, self.filterlen)
                         return
 
-                    imageurl = self.random_chart["song"]["imagePath"]
+                    # imageurl = self.random_chart["song"]["imagePath"]
+                    imageurl = self.random_chart["imageUrl"]
                     if not offlinemode:
                         download_image(self.random_chart, output_dir)
 
                     self.songcardname = Path(imageurl).name
-                    self.songlevel = self.random_chart["shorthand"]
+                    self.songlevel = self.random_chart["difficulty"]
 
                     chart_dict = {"level": self.songlevel,
                                   "image": self.songcardname}
@@ -148,9 +152,10 @@ class RandomizerButton(QObject):
             APPCACHE_DIR = Path("api/appcache/songcards")
             output_dir = APPCACHE_DIR
             output_dir.parent.mkdir(parents=True, exist_ok=True)
-            output_cache = Path(f"api/appcache/dump_all.json")
+            output_cache = Path(f"api/appcache/dump_all_v2.json")
             if not output_cache:
-                get_charts_info()
+                # get_charts_info()
+                get_charts_info_v2(mix="phoenix2")
 
         for chart in allchartsinfo:
 
@@ -202,12 +207,13 @@ class RandomizerButton(QObject):
                         int_n_songs, self.filterlen)
                     return
 
-                imageurl = self.random_chart["song"]["imagePath"]
+                imageurl = self.random_chart["imageUrl"]
+                # imageurl = self.random_chart["song"]["imagePath"]
                 if not offlinemode:
                     download_image(self.random_chart, output_dir)
 
                 self.songcardname = Path(imageurl).name
-                self.songlevel = self.random_chart["shorthand"]
+                self.songlevel = self.random_chart["difficulty"]
 
                 chart_dict = {"level": self.songlevel,
                               "image": self.songcardname}
