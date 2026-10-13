@@ -35,8 +35,6 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
     true_filters = []
     filtered_results = []
 
-    print(categoryfilterdict)
-
     for category, filter in categoryfilterdict.items():
         if filter:
             true_filters.append(category)
@@ -46,7 +44,7 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
 
     for chart in filtered_listwdict:
         # if chart["song"]["type"].lower() in true_filters:
-        if chart["type"].lower() in true_filters:
+        if chart["songType"].lower() in true_filters:
             filtered_results.append(chart)
 
     return filtered_results  # List with dict
