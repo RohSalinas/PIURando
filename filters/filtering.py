@@ -1,4 +1,5 @@
-import json
+import csv
+from pathlib import Path
 
 """
 Filters are applied from a mayor to a lower hierarchy.
@@ -50,7 +51,7 @@ def filter_bycategory(filtered_listwdict, categoryfilterdict):
     return filtered_results  # List with dict
 
 
-def filter_coop(json_data, type, n_persons):
+def filter_coop(json_data, type, n_persons, tier, tierflag=False):
     filtered_results = []
     true_filters = []
 
@@ -59,15 +60,50 @@ def filter_coop(json_data, type, n_persons):
             filtered_results.append(chart)
 
     if n_persons == "any":
-        return filtered_results  # List with dicts
+        if tierflag:
+            cooptiers = load_cooptiers()
+            print(cooptiers)
+            print("="*60)
+            current_tier_list = [
+                song for song in cooptiers if song["tier"] == tier]
+
+            print(current_tier_list)
+
+            for chart in filtered_results:
+                if any(song["songName"] == chart["songName"] for song in current_tier_list):
+                    true_filters.append(chart)
+            print(true_filters)
+            return true_filters
+        else:
+            return filtered_results  # List with dicts
+
     else:
         coop_n = f"{type}{n_persons}"
 
-        for chart in filtered_results:
-            if chart["difficulty"] == coop_n:
-                true_filters.append(chart)
+        if tierflag:
+            cooptiers = load_cooptiers()
+            current_tier_list = [
+                song for song in cooptiers if song["tier"] == tier and song["difficulty"] == coop_n]
+            for chart in filtered_results:
+                if any(song["songName"] == chart["songName"] for song in current_tier_list):
+                    true_filters.append(chart)
+            return true_filters
+        else:
+
+            for chart in filtered_results:
+                if chart["difficulty"] == coop_n:
+                    true_filters.append(chart)
 
         # with open(f"coop_{n_persons}players.json", "w", encoding="utf-8") as f:
         #     json.dump(true_filters, f, indent=4)
 
         return true_filters
+
+
+def load_cooptiers():
+    CSV_PATH = Path("api/appcache/coop_songs.csv")
+
+    with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as f:
+        coop_tiers = list(csv.DictReader(f))
+
+    return coop_tiers

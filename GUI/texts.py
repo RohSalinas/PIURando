@@ -33,15 +33,24 @@ menuText = {
     "Settings6": "Custom Individual charts (Use left checkboxs)"
 }
 
+aboutText = """
+<h2><b>Pump it Up Randomizer</b></h2>
+- Created by <b><p style="color: cyan;">RoHiSakk</p></b>
+- API integration from
+<a href="https://piuscores.arroweclip.se">PIUScores API</a><br>
+(Special thanks to Dr. Murloc for maintaining it!)<br><br>
+- Co-Op tierlist based on
+<a href="https://arcadestat.app/en/pump/tier/c2">ArcadeStat</a>
+    """
 
 stylesheets = {
     "defaultLevel": """
             QLabel {
                 color: white;
+                font-family: "Oswald";
                 background-color: black;
                 font-size: 22px;
                 font-weight: bold;
-                font-style: italic;
                 padding: 10px;
                 border-radius:10px;
             }
@@ -50,6 +59,7 @@ stylesheets = {
             QLabel {
                 color: white;
                 background-color: green;
+                font-family: "Oswald";
                 font-size: 30px;
                 font-weight: bold;
                 padding: 10px;
@@ -61,6 +71,7 @@ stylesheets = {
                 color: white;
                 background-color: red;
                 font-size: 30px;
+                font-family: "Oswald";
                 font-weight: bold;
                 padding: 10px;
                 border-radius:10px;
@@ -70,7 +81,8 @@ stylesheets = {
             QLabel {
                 color: black;
                 background-color: yellow;
-                font-size: 30px;
+                font-size: 20px;
+                font-family: "Oswald";
                 font-weight: bold;
                 padding: 10px;
                 border-radius: 10px;
@@ -79,16 +91,32 @@ stylesheets = {
     "randomize": """
             QPushButton {
                 color: white;
-                background-color: blue;
-                font-size: 25px;
+                font-family: "Oswald";
+                background-color: #1eba2b;
+                font-size: 40px;
                 font-weight: bold;
+                border: 5px #096b0c;
+                border-radius: 15px;
                 padding: 10px;
                 border-radius: 10px;
             }
+
+            QPushButton:hover{
+                border: 3px solid white;
+                }
+
+            QPushButton:pressed{
+                background-color: #096b0c;
+                }
+
             """,
 
     "MainSettings": """
             QLabel {
+                background-image: url("GUI/assets/options1.png");
+                background-position: center;
+                background-repeat: no-repeat;
+                font-family: "Oswald";
                 color: white;
                 outline-color: black;
                 background-color: rgb(0, 76, 153);
@@ -101,7 +129,11 @@ stylesheets = {
             """,
     "SecSettings": """
             QLabel {
+                background-image: url("GUI/assets/options1.png");
+                background-position: center;
+                background-repeat: no-repeat;
                 color: white;
+                font-family: "Oswald";
                 outline-color: black;
                 background-color: rgb(0, 102, 204);
                 font-size: 15px;

@@ -1,13 +1,13 @@
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QLabel, QSizePolicy, QApplication
-from PySide6.QtWidgets import QMainWindow, QLabel, QFrame, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog, QFormLayout
-from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QMainWindow, QLabel, QFrame, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QCheckBox, QMessageBox, QProgressBar, QDialog, QGraphicsDropShadowEffect
+from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtCore import Qt, QThread
 
 from api.api_functions import RandomizerButton
 from api.api_maincall import delete_cache, CacheWorker, get_charts_info_v2
 
-from GUI.texts import cacheText, stylesheets, menuText
+from GUI.texts import cacheText, stylesheets, menuText, aboutText
 from pathlib import Path
 
 
@@ -63,9 +63,7 @@ class MainWindow(QMainWindow):
         # Menu Triggers
         # *************************
         exitAction.triggered.connect(self.close)
-        aboutAction.triggered.connect(lambda: QMessageBox.information(self,
-                                                                      "About Pump it Up Randomizer",
-                                                                      "Work in progress by RoHiSakk"))
+        aboutAction.triggered.connect(self.show_about)
 
         cacheReloadCache.triggered.connect(self.cacheReload_yes_no)
         cacheDeleteCache.triggered.connect(self.cacheDelete_yes_no)
@@ -136,7 +134,7 @@ class MainWindow(QMainWindow):
         self.layout_songart.setColumnStretch(0, 1)
         self.layout_songart.setColumnStretch(1, 0)
 
-        self.song_images[0].set_image("cover.png")
+        self.song_images[0].set_image("GUI/assets/startup.png")
         self.song_images[0].show()
 
         self.song_levels[0].setText(
@@ -149,12 +147,6 @@ class MainWindow(QMainWindow):
             self.song_titles[i].hide()
 
         self.song_titles[0].hide()
-
-        # for image in self.song_images[1:]:
-        #     image.hide()
-
-        # for level in self.song_levels[1:]:
-        #     level.hide()
 
         # *************************
         # Song Card Art /Level Triggers
@@ -245,6 +237,7 @@ class MainWindow(QMainWindow):
         layout_SecSettingsV = QVBoxLayout()
         layout_SecSettingsH1 = QHBoxLayout()
         layout_SecSettingsH2 = QHBoxLayout()
+        layout_SecSettingsH3 = QHBoxLayout()
 
         # layout_SecSettingsH1.setAlignment(Qt.AlignTop)
 
@@ -258,6 +251,12 @@ class MainWindow(QMainWindow):
         self.wg_shortcut_checkbox = QCheckBox("Shorcut")
         self.wg_fullsong_checkbox = QCheckBox("Full Song")
         self.wg_remix_checkbox = QCheckBox("Remix")
+
+        self.wg_cooptier_check = QCheckBox("Co-Op Tiers")
+        self.wg_cooptier_list = QComboBox()
+        self.wg_cooptier_list.addItems(
+            ["Bottom", "Low", "Lower-Mid", "Mid", "Upper-Mid", "High", "Top", "Unique"])
+        self.wg_cooptier_list.setEnabled(False)
 
         self.wg_reset_button = QPushButton("Reset to default")
         self.wg_reset_button.clicked.connect(self.reset_defaults)
@@ -283,15 +282,20 @@ class MainWindow(QMainWindow):
         layout_SecSettingsH1.addWidget(self.wg_fullsong_checkbox)
         layout_SecSettingsH1.addWidget(self.wg_remix_checkbox)
 
-        layout_SecSettingsH2.addWidget(self.wg_reset_button)
-        layout_SecSettingsH2.addWidget(self.wg_offlinemode_text)
-        layout_SecSettingsH2.addWidget(self.wg_offlinemode)
+        layout_SecSettingsH2.addWidget(self.wg_cooptier_check)
+        layout_SecSettingsH2.addWidget(self.wg_cooptier_list)
         layout_SecSettingsH2.setAlignment(Qt.AlignCenter)
+
+        layout_SecSettingsH3.addWidget(self.wg_reset_button)
+        layout_SecSettingsH3.addWidget(self.wg_offlinemode_text)
+        layout_SecSettingsH3.addWidget(self.wg_offlinemode)
+        layout_SecSettingsH3.setAlignment(Qt.AlignCenter)
 
         layout_SecSettingsV.addWidget(self.wg_secsettingstitle)
         layout_SecSettingsV.addWidget(self.separator2)
         layout_SecSettingsV.addLayout(layout_SecSettingsH1)
         layout_SecSettingsV.addLayout(layout_SecSettingsH2)
+        layout_SecSettingsV.addLayout(layout_SecSettingsH3)
 
         # *************************
         # Sub Settings Triggers
@@ -299,6 +303,10 @@ class MainWindow(QMainWindow):
 
         self.wg_offlinemode.toggled.connect(
             self.check_change_internet)
+
+        self.wg_cooptier_check.checkStateChanged.connect(
+            lambda state: self.activate_coop_tier(
+                state, self.wg_cooptier_list))
 # ==========================================================================================================================================================
         # =========================
         # Predefined Settings:
@@ -313,7 +321,7 @@ class MainWindow(QMainWindow):
         self.wg_pred_settings_title = QLabel("Predefined Settings")
         self.wg_pred_settings_title.setStyleSheet(stylesheets["SecSettings"])
         self.wg_pred_settings_title.setAlignment(Qt.AlignCenter)
-        self.wg_pred_settings_title.setFixedHeight(35)
+        self.wg_pred_settings_title.setFixedHeight(40)
 
         self.activate_predetermined_checkbox = QCheckBox()
 
@@ -409,7 +417,14 @@ class MainWindow(QMainWindow):
         # randomizer = RandomizerButton()
 
         wg_button = QPushButton("Randomize!")
+        wg_button.setFixedHeight(80)
         wg_button.setStyleSheet(stylesheets["randomize"])
+
+        bt_shadoweffect = QGraphicsDropShadowEffect(wg_button)
+        bt_shadoweffect.setBlurRadius(15)
+        bt_shadoweffect.setOffset(5, 5)
+        bt_shadoweffect.setColor(QColor(0, 0, 0, 180))
+        wg_button.setGraphicsEffect(bt_shadoweffect)
 
         layout_button.addWidget(wg_button)
 
@@ -682,6 +697,13 @@ class MainWindow(QMainWindow):
             self.wg_coop_players.setEnabled(False)
             self.wg_numberofcards.setEnabled(True)
 
+    def activate_coop_tier(self, state, tier_box: QLineEdit):
+
+        if state == Qt.Checked:
+            tier_box.setEnabled(True)
+        else:
+            tier_box.setEnabled(False)
+
     def check_change_internet(self, checked):
         if checked:
             if self.cache_flag.exists():
@@ -814,6 +836,7 @@ class MainWindow(QMainWindow):
         self.wg_fullsong_checkbox.setChecked(False)
         self.wg_shortcut_checkbox.setChecked(False)
         self.wg_checkbox_intervals.setChecked(False)
+        self.wg_cooptier_check.setChecked(False)
 
     def deactivate_by_pred(self):
         self.wg_mode.setEnabled(False)
@@ -1070,6 +1093,8 @@ class MainWindow(QMainWindow):
                     "remix": self.wg_remix_checkbox.isChecked()
                 },
                 self.wg_coop_players.currentText(),
+                self.wg_cooptier_list.currentText(),
+                self.wg_cooptier_check.isChecked(),
                 self.wg_checkbox_intervals.isChecked(),
                 offlinemode=self.wg_offlinemode.isChecked()
             )
@@ -1085,6 +1110,16 @@ class MainWindow(QMainWindow):
                 offlinemode=self.wg_offlinemode.isChecked()
             )
 
+    def show_about(self):
+        msg = QMessageBox(self)
+        msg.setWindowTitle("About")
+        msg.setTextFormat(Qt.TextFormat.RichText)
+        msg.setText(aboutText)
+        msg.setIconPixmap(QPixmap("GUI/assets/rhs.png").scaled(64, 64))
+        msg.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
+        msg.exec()
 # ==============================================================================================================================================
 # ==============================================================================================================================================
 # ==============================================================================================================================================
@@ -1138,8 +1173,6 @@ class APITokenWindow(QDialog):
         self.API_SaveButton.clicked.connect(
             self.API_savetoken)
 
-        # self.token_exists()
-        # self.block_text_ifAPI()
         self.update_token_state()
 
     def API_closewindow(self):
@@ -1230,8 +1263,6 @@ class ImageLabel(QLabel):
         self.setPixmap(scaled)
         self.setAlignment(Qt.AlignCenter)
 
-    # Important: don't let the original image dictate
-    # the minimum size of the window.
     def sizeHint(self):
         return QSize(0, 0)
 

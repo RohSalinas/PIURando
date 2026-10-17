@@ -31,7 +31,7 @@ class RandomizerButton(QObject):
         self.nsongs = None
         self.selected = set()
 
-    def randomize_button(self, json_all, mode, fromlvl, tolvl, n_songs, subsettings, n_persons, maxlevel=False, offlinemode=True):
+    def randomize_button(self, json_all, mode, fromlvl, tolvl, n_songs, subsettings, n_persons, coop_tier, coop_tiercheck=False, maxlevel=False, offlinemode=True):
 
         self.allcharts.clear()
 
@@ -49,8 +49,10 @@ class RandomizerButton(QObject):
             CoOp_n_persons = str(n_persons)
 
             mf = {
-                "type": CoOp_flag,
-                "persons": CoOp_n_persons
+                "type":     CoOp_flag,
+                "persons":  CoOp_n_persons,
+                "tiercheck": coop_tiercheck,
+                "tier": coop_tier
             }
 
             self.random_chart, self.filterlen = randomize_chart(
