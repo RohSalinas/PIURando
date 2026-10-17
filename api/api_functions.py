@@ -26,6 +26,7 @@ class RandomizerButton(QObject):
         self.filterlen = None
         self.songcardname = ""
         self.songlevel = ""
+        self.songtitle = ""
         self.allcharts = []
         self.nsongs = None
         self.selected = set()
@@ -67,9 +68,11 @@ class RandomizerButton(QObject):
             self.songcardname = Path(imageurl).name
             # self.songlevel = self.random_chart["shorthand"]
             self.songlevel = self.random_chart["difficulty"]
+            self.songtitle = self.random_chart["songName"]
 
             chart_dict = {"level": self.songlevel,
-                          "image": self.songcardname}
+                          "image": self.songcardname,
+                          "title": self.songtitle}
 
             self.allcharts.append(chart_dict)
 
@@ -128,9 +131,13 @@ class RandomizerButton(QObject):
 
                     self.songcardname = Path(imageurl).name
                     self.songlevel = self.random_chart["difficulty"]
+                    self.songtitle = self.random_chart["songName"]
 
                     chart_dict = {"level": self.songlevel,
-                                  "image": self.songcardname}
+                                  "image": self.songcardname,
+                                  "title": self.songtitle}
+
+                    print("CREATED:", chart_dict)
 
                     if self.songcardname in self.selected:
                         print(f"Repetida: {self.songcardname}")
@@ -138,6 +145,9 @@ class RandomizerButton(QObject):
                         break
 
                     self.selected.add(self.songcardname)
+
+                    print("BEFORE APPEND:", chart_dict)
+
                     self.allcharts.append(chart_dict)
                     attempts += 1
 
@@ -214,9 +224,11 @@ class RandomizerButton(QObject):
 
                 self.songcardname = Path(imageurl).name
                 self.songlevel = self.random_chart["difficulty"]
+                self.songtitle = self.random_chart["songName"]
 
                 chart_dict = {"level": self.songlevel,
-                              "image": self.songcardname}
+                              "image": self.songcardname,
+                              "title": self.songtitle}
 
                 if self.songcardname in self.selected:
                     print(f"Repetida: {self.songcardname}")
@@ -241,14 +253,14 @@ class RandomizerButton(QObject):
             else:
                 final_label = chart["level"]
 
+            current_title = chart["title"]
+
             updated_charts.append({
                 "image": path_to_random,
-                "level": final_label
+                "level": final_label,
+                "title": current_title
             })
 
         print(updated_charts)
 
         self.newcharts_ok.emit(updated_charts)
-
-        # self.imagechange.emit(image_paths)
-        # self.levelchange.emit(levels)

@@ -99,10 +99,16 @@ class MainWindow(QMainWindow):
 
         self.song_images = []
         self.song_levels = []
+        self.song_titles = []
 
         for i in range(6):
 
             image = ImageLabel()
+
+            title = QLabel("")
+            title.setAlignment(Qt.AlignCenter)
+            title.setFixedHeight(50)
+            title.setStyleSheet(stylesheets["defaultLevel"])
 
             level = QLabel("")
             level.setAlignment(Qt.AlignCenter)
@@ -110,6 +116,7 @@ class MainWindow(QMainWindow):
             level.setStyleSheet(stylesheets["defaultLevel"])
 
             self.song_images.append(image)
+            self.song_titles.append(title)
             self.song_levels.append(level)
 
         for i in range(6):
@@ -118,8 +125,13 @@ class MainWindow(QMainWindow):
             col = i % 2
 
             self.layout_songart.addWidget(self.song_images[i], row * 2, col)
-            self.layout_songart.addWidget(
-                self.song_levels[i], row * 2 + 1, col)
+
+            layout_leveltitle = QHBoxLayout()
+            layout_leveltitle.addWidget(self.song_levels[i], 1)
+            layout_leveltitle.addWidget(self.song_titles[i], 3)
+
+            self.layout_songart.addLayout(
+                layout_leveltitle, row * 2 + 1, col)
 
         self.layout_songart.setColumnStretch(0, 1)
         self.layout_songart.setColumnStretch(1, 0)
@@ -131,11 +143,18 @@ class MainWindow(QMainWindow):
             "Choose your settings and press 'Randomize' to start!")
         self.song_levels[0].show()
 
-        for image in self.song_images[1:]:
-            image.hide()
+        for i in range(1, 6):
+            self.song_images[i].hide()
+            self.song_levels[i].hide()
+            self.song_titles[i].hide()
 
-        for level in self.song_levels[1:]:
-            level.hide()
+        self.song_titles[0].hide()
+
+        # for image in self.song_images[1:]:
+        #     image.hide()
+
+        # for level in self.song_levels[1:]:
+        #     level.hide()
 
         # *************************
         # Song Card Art /Level Triggers
@@ -685,11 +704,14 @@ class MainWindow(QMainWindow):
     def update_song_cards(self, charts):
 
         # Remove widgets from the layout (Fresh start)
-        for image in self.song_images:
-            self.layout_songart.removeWidget(image)
+        # for image in self.song_images:
+        #     self.layout_songart.removeWidget(image)
 
-        for level in self.song_levels:
-            self.layout_songart.removeWidget(level)
+        # for level in self.song_levels:
+        #     self.layout_songart.removeWidget(level)
+
+        # for title in self.song_titles:
+        #     self.layout_songart.removeWidget(title)
 
         # Hide everything (Fresh start)
         for image in self.song_images:
@@ -698,23 +720,29 @@ class MainWindow(QMainWindow):
         for level in self.song_levels:
             level.hide()
 
+        for title in self.song_titles:
+            title.hide()
+
         if len(charts) == 1:
             self.layout_songart.setColumnStretch(0, 1)
             self.layout_songart.setColumnStretch(1, 0)
 
             image = self.song_images[0]
             level = self.song_levels[0]
+            title = self.song_titles[0]
 
             image.set_image(charts[0]["image"])
             level.setText(charts[0]["level"])
+            title.setText(charts[0]["title"])
 
             self.set_level_style(level, charts[0]["level"])
 
-            self.layout_songart.addWidget(image, 0, 0, 1, 2)
-            self.layout_songart.addWidget(level, 1, 0, 1, 2)
+            # self.layout_songart.addWidget(image, 0, 0, 1, 2)
+            # self.layout_songart.addWidget(level, 1, 0, 1, 2)
 
             image.show()
             level.show()
+            title.show()
 
         else:
 
@@ -725,20 +753,23 @@ class MainWindow(QMainWindow):
 
                 image = self.song_images[i]
                 level = self.song_levels[i]
+                title = self.song_titles[i]
 
                 image.set_image(chart["image"])
                 level.setText(chart["level"])
+                title.setText(chart["title"])
 
                 self.set_level_style(level, chart["level"])
 
                 row = i // 2
                 col = i % 2
 
-                self.layout_songart.addWidget(image, row * 2, col)
-                self.layout_songart.addWidget(level, row * 2 + 1, col)
+                # self.layout_songart.addWidget(image, row * 2, col)
+                # self.layout_songart.addWidget(level, row * 2 + 1, col)
 
                 image.show()
                 level.show()
+                title.show()
 
     def set_level_style(self, label, level):
 
