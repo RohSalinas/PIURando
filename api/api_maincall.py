@@ -15,7 +15,6 @@ LOCAL_APP_DATA = Path(
 )
 
 BASE_URL = "https://piuscores.arroweclip.se"
-# TOKEN_PATH = Path("api/appcache/token.txt")
 
 APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
 SONGS_DIR = APPCACHE_DIR / "songcards"
@@ -27,21 +26,6 @@ def get_token():
         return None
 
     return TOKEN_PATH.read_text(encoding="utf-8").strip()
-
-
-# ===================================================
-# # My token, needs to be replaced later
-# TOKEN = "45c59b48-6c87-4dc2-9466-9fb533fe8471"
-# basic = base64.b64encode(f":{TOKEN}".encode()).decode()
-# HEADERS = {
-#     "Authorization": f"Basic {basic}",
-#     "Accept": "*/*",
-# }
-
-# ===================================================
-
-# APPCACHE_DIR = Path("api/appcache")
-# SONGS_DIR = Path(APPCACHE_DIR / "songcards")
 
 
 # Create this once, reuse across all workers
@@ -67,11 +51,6 @@ def get_charts_info_v2(mix=None, chart_type=None, level=None, count=False, max_c
         level      : int (1 to 29)
         count      : Max number of charts to fetch from the API
     """
-
-    # Build dictionaty with information of charts retrieved
-    # Max charts logic
-    # APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
-    # SONGS_DIR.mkdir(parents=True, exist_ok=True)
 
     APPCACHE_DIR.mkdir(parents=True, exist_ok=True)
     SONGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -217,11 +196,6 @@ def delete_cache(apidialog):
     for songcard in SONGS_DIR.iterdir():
         if songcard.name.endswith(".png") or songcard.name.endswith(".cache"):
             songcard.unlink()
-    # for token in APPCACHE_DIR.iterdir():
-    #     if token.name.endswith(".txt") or token.name.endswith(".json"):
-    #         token.unlink()
-
-    # apidialog.update_token_state()
 
 
 class CacheWorker(QObject):

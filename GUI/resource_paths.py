@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from PySide6.QtCore import QUrl
 
@@ -11,12 +10,6 @@ def asset_path(filename: str) -> Path:
     """Return the absolute path to a bundled GUI asset."""
     return ASSET_DIR / filename
 
-
-# def asset_url(filename: str) -> str:
-#     """Return a file URL suitable for a Qt stylesheet."""
-#     return QUrl.fromLocalFile(
-#         str(asset_path(filename).resolve())
-#     ).toString()
 
 def asset_url(filename: str) -> str:
     return asset_path(filename).resolve().as_posix()
