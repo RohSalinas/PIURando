@@ -12,7 +12,7 @@ PIURando is a downloadable, locally running Pump it Up song/chart randomizer tha
 - **Simple interface:** Minimized buttons, sliders and selections so you can focus on what's important: The random chart.
 
 ### DOWNLOAD PIURando
-If you are not familiar with GitHub, you can click here to go to the most current released version and download the .rar file from there. It is as simple as unzipping in your desired folder and run it!
+If you are not familiar with GitHub, you can click here to [download the latest release](https://github.com/RohSalinas/PIURando/releases/latest). On this page, go down and in "Assets" click on the file "PIURando_v1_X_X.zip". Then, it is as simple as unzipping in your desired folder and run the app!
 
 ### HOW TO SETUP (FIRST TIME USER)
 
@@ -25,5 +25,5 @@ If you are not familiar with GitHub, you can click here to go to the most curren
 - File -> Cache offers you the options of reloading the cache. I recommend doing this after each Pump it Up update to keep the metadata of new songs/chars up to date.
 
 ### Acknowledges
-- Dr.Murloc, maker of the PIUScores project (and the reason I have an API to access to)
+- DrMurloc, maker of the PIUScores project (and the reason I have an API to access to)
 - ArcadaStat for the most current Co-Op tierlist.
