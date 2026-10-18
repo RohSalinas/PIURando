@@ -2,6 +2,7 @@ import requests
 import json
 from pathlib import Path
 import base64
+import os
 
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from PySide6.QtCore import QObject, Signal
@@ -9,8 +10,16 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
+LOCAL_APP_DATA = Path(
+    os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+)
+
 BASE_URL = "https://piuscores.arroweclip.se"
-TOKEN_PATH = Path("api/appcache/token.txt")
+# TOKEN_PATH = Path("api/appcache/token.txt")
+
+APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+SONGS_DIR = APPCACHE_DIR / "songcards"
+TOKEN_PATH = APPCACHE_DIR / "token.txt"
 
 
 def get_token():
@@ -31,8 +40,8 @@ def get_token():
 
 # ===================================================
 
-APPCACHE_DIR = Path("api/appcache")
-SONGS_DIR = Path(APPCACHE_DIR / "songcards")
+# APPCACHE_DIR = Path("api/appcache")
+# SONGS_DIR = Path(APPCACHE_DIR / "songcards")
 
 
 # Create this once, reuse across all workers
@@ -48,90 +57,6 @@ _session.mount("https://", _adapter)
 _session.mount("http://", _adapter)
 
 
-# def get_charts_info(mix=None, chart_type=None, level=None, count=False, max_count=4):
-#     """
-#     Fetch charts from /api/charts with optional filters and save a dump JSON file.
-
-#     Parameters:
-#         mix        : Game version string, e.g. "Phoenix", "XX", "Fiesta2"
-#         chart_type : "Single" or "Double"
-#         level      : int (1 to 29)
-#         count      : Max number of charts to fetch from the API
-#     """
-
-#     # Build dictionaty with information of charts retrieved
-#     # Max charts logic
-#     APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
-#     SONGS_DIR.mkdir(parents=True, exist_ok=True)
-
-#     TOKEN = get_token()
-#     basic = base64.b64encode(f":{TOKEN}".encode()).decode()
-#     HEADERS = {
-#         "Authorization": f"Basic {basic}",
-#         "Accept": "*/*",
-#     }
-
-#     if count:
-#         params = {"Count": max_count}
-#     else:
-#         params = {"Count": 99999}
-
-#     # Mix, type and level
-#     if mix:
-#         params["Mix"] = mix
-#     if chart_type:
-#         params["ChartType"] = chart_type
-#     if level is not None:
-#         params["Level"] = level
-
-#     # # API request
-#     try:
-#         response = _session.get(
-#             f"{BASE_URL}/api/charts",
-#             headers=HEADERS,
-#             params=params,
-#             timeout=10,
-#         )
-
-#     except requests.ConnectionError:
-#         print("Could not connect to the remote server.")
-
-#         return None
-
-#     except requests.Timeout:
-#         print("The remote server took too long to respond.")
-#         return None
-
-#     except requests.RequestException as e:
-#         print(f"Request failed: {e}")
-#         return None
-
-#     # Check API status
-#     print(f"Status : {response.status_code}")
-#     print(f"URL    : {response.url}\n")
-
-#     # Output dir
-#     if not chart_type:
-#         output_file = Path(APPCACHE_DIR / "dump_all.json")
-#     else:
-#         output_file = Path(APPCACHE_DIR / f"dump_{chart_type}.json")
-
-#     # Retrieval if API ok
-#     if response.ok:
-
-#         charts = response.json()
-
-#         if output_file:
-#             with open(output_file, "w", encoding="utf-8") as f:
-#                 json.dump(charts, f, indent=4, ensure_ascii=False)
-
-#         return response.json()
-
-#     else:
-#         print("Error response:", response.text)
-#         return None
-
-
 def get_charts_info_v2(mix=None, chart_type=None, level=None, count=False, max_count=4, status_callback=None):
     """
     Fetch charts from /api/charts with optional filters and save a dump JSON file.
@@ -145,7 +70,10 @@ def get_charts_info_v2(mix=None, chart_type=None, level=None, count=False, max_c
 
     # Build dictionaty with information of charts retrieved
     # Max charts logic
-    APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+    # APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+    # SONGS_DIR.mkdir(parents=True, exist_ok=True)
+
+    APPCACHE_DIR.mkdir(parents=True, exist_ok=True)
     SONGS_DIR.mkdir(parents=True, exist_ok=True)
 
     TOKEN = get_token()
@@ -238,7 +166,7 @@ def load_json(file_path):
         JSON file as a python dict    
     """
 
-    with open(file_path) as f:
+    with open(file_path, encoding="utf-8") as f:
         json_file = json.load(f)
         return json_file
 
@@ -289,11 +217,11 @@ def delete_cache(apidialog):
     for songcard in SONGS_DIR.iterdir():
         if songcard.name.endswith(".png") or songcard.name.endswith(".cache"):
             songcard.unlink()
-    for token in APPCACHE_DIR.iterdir():
-        if token.name.endswith(".txt") or token.name.endswith(".json"):
-            token.unlink()
+    # for token in APPCACHE_DIR.iterdir():
+    #     if token.name.endswith(".txt") or token.name.endswith(".json"):
+    #         token.unlink()
 
-    apidialog.update_token_state()
+    # apidialog.update_token_state()
 
 
 class CacheWorker(QObject):

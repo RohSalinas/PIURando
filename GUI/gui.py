@@ -8,13 +8,21 @@ from api.api_functions import RandomizerButton
 from api.api_maincall import delete_cache, CacheWorker, get_charts_info_v2
 
 from GUI.texts import cacheText, stylesheets, menuText, aboutText
+from GUI.resource_paths import asset_path
 from pathlib import Path
+import os
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
 
         # =========================
         # Windows size
@@ -31,9 +39,9 @@ class MainWindow(QMainWindow):
         # =========================
         # Cache Sub Menu
         # =========================
-        self.cache_flag = Path("api/appcache/songcards/.cache")
-        self.json_dump = Path("api/appcache/dump_all_v2.json")
-        self.token = Path("api/appcache/token.txt")
+        self.cache_flag = Path(SONGS_DIR / ".cache")
+        self.json_dump = Path(APPCACHE_DIR / "dump_all_v2.json")
+        self.token = Path(APPCACHE_DIR / "token.txt")
 
         cacheSubMenu = fileMenu.addMenu("Cache")
         cacheReloadCache = cacheSubMenu.addAction("Reload song cards cache")
@@ -134,7 +142,9 @@ class MainWindow(QMainWindow):
         self.layout_songart.setColumnStretch(0, 1)
         self.layout_songart.setColumnStretch(1, 0)
 
-        self.song_images[0].set_image("GUI/assets/startup.png")
+        self.startupimage = str(asset_path("startup.png"))
+
+        self.song_images[0].set_image(self.startupimage)
         self.song_images[0].show()
 
         self.song_levels[0].setText(
@@ -451,6 +461,12 @@ class MainWindow(QMainWindow):
                                                                                                            f"While you asked for {requested} song cards, your filters give a total of {available} song cards.\n"
                                                                                                            "Please change your maximum number of song cards requested"))
 
+        self.randomizer.error_notoken.connect(lambda: QMessageBox.information(self,
+                                                                              "No token found",
+                                                                              "An API token is required to download the songchart informations for song cards.\n"
+                                                                              "This is necessary for randomization in Online mode.\n"
+                                                                              "Please input your API token information in the User configuration"))
+
 # ==========================================================================================================================================================
         # =========================
         # Add all layouts to Main Layout
@@ -479,8 +495,12 @@ class MainWindow(QMainWindow):
 
     def first_time_cache(self):
 
-        APPCACHE_DIR = Path("api/appcache")
-        SONGS_DIR = Path(APPCACHE_DIR / "songcards")
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+        )
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
 
         APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
         SONGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -539,7 +559,7 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-            jsondump_forsongcard = Path("api/appcache/dump_all_v2.json")
+            jsondump_forsongcard = Path(APPCACHE_DIR / "dump_all_v2.json")
 
             # Keep references alive
             self.cache_dialog = CacheDialog(self)
@@ -576,13 +596,24 @@ class MainWindow(QMainWindow):
                     self, "First Cache", "Song cards downloaded successfully!")
 
     def cacheReload_yes_no(self):
+
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+        )
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
+
+        APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+        SONGS_DIR.mkdir(parents=True, exist_ok=True)
+
         cache_answer = QMessageBox.question(
             self, "Reload Song Cards cache", cacheText["ReloadCache"])
 
         if cache_answer != QMessageBox.Yes:
             return
 
-        if not self.token:
+        if not self.token.exists():
             api_flag = self.no_API_key_window()
 
             if not api_flag:
@@ -595,11 +626,11 @@ class MainWindow(QMainWindow):
                 return
 
         self.cache_gettingjson = QDialog(self)
-        self.cache_gettingjson.setWindowTitle("Reloading songs cache")
-        self.cache_gettingjson.setFixedSize(200, 75)
+        self.cache_gettingjson.setWindowTitle("Reloading songs cards cache")
+        self.cache_gettingjson.setFixedSize(300, 75)
 
         layout_gettingjson = QVBoxLayout(self.cache_gettingjson)
-        label = QLabel("Getting songs metadata...")
+        label = QLabel("Getting charts metadata...")
         label.setAlignment(Qt.AlignCenter)
         layout_gettingjson.addWidget(label)
 
@@ -625,7 +656,7 @@ class MainWindow(QMainWindow):
             return
 
         print("Before json check")
-        jsondump_forsongcard = Path("api/appcache/dump_all_v2.json")
+        jsondump_forsongcard = Path(APPCACHE_DIR / "dump_all_v2.json")
         print("After json check")
 
         # Keep references alive
@@ -670,6 +701,9 @@ class MainWindow(QMainWindow):
             print("Deleting")
             delete_cache(self.API_dialog)
             print("Finish deleting")
+            self.wg_offlinemode.blockSignals(True)
+            self.wg_offlinemode.setChecked(False)
+            self.wg_offlinemode.blockSignals(False)
             self.def_cache_confirmation = QMessageBox.information(
                 self, "Delete Cache", "Song cards cache deleted successfully!")
 
@@ -809,8 +843,12 @@ class MainWindow(QMainWindow):
 
     def no_API_key_window(self):
         self.API_dialog.exec()
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+        )
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
 
-        token_path = Path("api/appcache/token.txt")
+        token_path = Path(APPCACHE_DIR / "token.txt")
 
         if not token_path.exists():
             self.token_not_ok = QMessageBox.information(self,
@@ -1115,7 +1153,7 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("About")
         msg.setTextFormat(Qt.TextFormat.RichText)
         msg.setText(aboutText)
-        msg.setIconPixmap(QPixmap("GUI/assets/rhs.png").scaled(64, 64))
+        msg.setIconPixmap(QPixmap(str(asset_path("rhs.png"))).scaled(64, 64))
         msg.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction
         )
@@ -1131,6 +1169,10 @@ class APITokenWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+
         main_layout_APIsettings = QVBoxLayout()
 
         layout_APIkey = QHBoxLayout()
@@ -1142,7 +1184,7 @@ class APITokenWindow(QDialog):
         API_info = QLabel("Please copy here the API token that you can find inside your user profile from PIU scores.\n"
                           "https://piuscores.arroweclip.se/Account -> API")
 
-        self.token_path = Path("api/appcache/token.txt")
+        self.token_path = Path(APPCACHE_DIR / "token.txt")
 
         layout_APIkey_buttons = QHBoxLayout()
         layout_APIkey_buttons.setAlignment(Qt.AlignRight)

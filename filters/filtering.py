@@ -101,7 +101,8 @@ def filter_coop(json_data, type, n_persons, tier, tierflag=False):
 
 
 def load_cooptiers():
-    CSV_PATH = Path("api/coop_songs.csv")
+    project_dir = Path(__file__).resolve().parent.parent
+    CSV_PATH = Path(project_dir / "api" / "coop_songs.csv")
 
     with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as f:
         coop_tiers = list(csv.DictReader(f))

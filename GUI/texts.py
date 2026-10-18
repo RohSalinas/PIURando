@@ -1,23 +1,27 @@
+from GUI.resource_paths import asset_url
+
+print(asset_url("options1.png"))
+
 cacheText = {
     "ReloadCache": "Do you want to reload the image cache for the songscards?. This will download all songcards locally for offline usage.\n\n"
     "This requires your PIUScores API token and internet connection (About 200MB of space if done the first time)\n\n"
     "It is recommended to run this after every PIU update to also add new songs and charts. Do you want to proceed?",
 
-    "DeleteCache": "Do you want to delete the cache for the songscards? This includes user token information.\n\n"
-    "This action cannot be undone, and can only be fixed by downloading the cache again which requires internet connection.\n\n"
+    "DeleteCache": "Do you want to delete the cache for the songscards? This doesn't include your API token information.\n\n"
+    "This action cannot be undone. You can re-download the cache again anytime, which requires internet connection.\n\n"
     "(About 200MB of space). Do you want to proceed?",
 
     "FirstTime": "There is no cache detected for the song cards in this computer.\n\n"
-    "For running tournaments and for an offline experience, it is recommended to download the song cards cache for visualization.\n\n"
+    "For running tournaments and for an offline experience, it is recommended to download the song cards cache beforehand for visualization.\n\n"
     "This requires your PIUScores API token and internet connection (About 200MB the first time).\n\n"
     "If you proceed, the API key windows will pop up to input your token. Do you want to proceed?",
 
     "Off_to_OnlineMode_cache": "You are changing to 'Online Mode'. Local cache files were detected in your system.\n\n"
-    "The application will work and only use internet data if a song not present in the cache is chosen (Usually new songs not yet updated in the cache).",
+    "The application will work and only use internet data if a song not present in the cache is selected (Usually new songs not yet updated in the cache).",
 
     "Off_to_OnlineMode_nocache": "You are changing to 'Online Mode' with no cache files downloaded locally.\n\n"
     "If you proceed, the application will work, but it will consume internet data every time a song is randomized.\n\n"
-    "It is recommended to download the cache previously with internet connection to mitigated this.",
+    "It is recommended to download the cache previously to mitigated this and to be up to date with song charts.",
 
     "On_to_OfflineMode_nocache": "You are changing to 'Offline Mode' with no cache files downloaded locally.\n\n"
     "For 'Offline mode', please perform a local cache installation (Menu -> Reload Song Cache).\n\n"
@@ -113,7 +117,7 @@ stylesheets = {
 
     "MainSettings": """
             QLabel {
-                background-image: url("GUI/assets/options1.png");
+                background-image: url("{OPTIONS_IMAGE}");
                 background-position: center;
                 background-repeat: no-repeat;
                 font-family: "Oswald";
@@ -126,10 +130,13 @@ stylesheets = {
                 border-radius: 2px;
                 text-align: center;
             }
-            """,
+            """.replace(
+                "{OPTIONS_IMAGE}",
+                asset_url("options1.png")
+    ),
     "SecSettings": """
             QLabel {
-                background-image: url("GUI/assets/options1.png");
+                background-image: url("{OPTIONS_IMAGE2}");
                 background-position: center;
                 background-repeat: no-repeat;
                 color: white;
@@ -142,5 +149,8 @@ stylesheets = {
                 border-radius: 2px;
                 text-align: center;
             }
-            """
+            """.replace(
+        "{OPTIONS_IMAGE2}",
+        asset_url("options1.png")
+    )
 }

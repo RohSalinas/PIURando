@@ -3,6 +3,7 @@ from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
 from api.api_maincall import download_image, get_charts_info_v2
+import os
 
 
 class RandomizerButton(QObject):
@@ -12,6 +13,7 @@ class RandomizerButton(QObject):
     error_nolevel = Signal()
     error_notenoughcharts = Signal(int, int)
     error_nomaxlevel_whentrue = Signal()
+    error_notoken = Signal()
 
     randomize_over = Signal()
 
@@ -19,9 +21,19 @@ class RandomizerButton(QObject):
     levelchange = Signal(list)
     newcharts_ok = Signal(list)
 
+    LOCAL_APP_DATA = Path(
+        os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+    )
+
+    APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+    SONGS_DIR = APPCACHE_DIR / "songcards"
+
+    APPCACHE_DIR.parent.mkdir(parents=True, exist_ok=True)
+    SONGS_DIR.mkdir(parents=True, exist_ok=True)
+
     def __init__(self):
         super().__init__()
-        self.cachefolder = Path("api/appcache/songcards/")
+        self.cachefolder = Path(self.APPCACHE_DIR / "songcards/")
         self.randomchart = None
         self.filterlen = None
         self.songcardname = ""
@@ -32,16 +44,28 @@ class RandomizerButton(QObject):
         self.selected = set()
 
     def randomize_button(self, json_all, mode, fromlvl, tolvl, n_songs, subsettings, n_persons, coop_tier, coop_tiercheck=False, maxlevel=False, offlinemode=True):
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
+        token = APPCACHE_DIR / "token.txt"
 
         self.allcharts.clear()
 
         if not offlinemode:
-            APPCACHE_DIR = Path("api/appcache/songcards")
+            print("Entering Online Mode")
+            print(offlinemode)
+
             output_dir = APPCACHE_DIR
-            output_dir.parent.mkdir(parents=True, exist_ok=True)
-            output_cache = Path(f"api/appcache/dump_all_v2.json")
-            if not output_cache:
-                # get_charts_info()
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_cache = Path(output_dir / "dump_all_v2.json")
+            if not output_cache.exists():
+                if not token.exists():
+                    self.error_notoken.emit()
+                    return
+
+                print("Entering not output cache")
                 get_charts_info_v2(mix="phoenix2")
 
         if mode == "Co-Op":
@@ -62,13 +86,12 @@ class RandomizerButton(QObject):
                 self.error_nolevel.emit()
                 return
 
-            # imageurl = self.random_chart["song"]["imagePath"]
             imageurl = self.random_chart["imageUrl"]
             if not offlinemode:
-                download_image(self.random_chart, output_dir)
+                download_image(self.random_chart, SONGS_DIR)
 
             self.songcardname = Path(imageurl).name
-            # self.songlevel = self.random_chart["shorthand"]
+
             self.songlevel = self.random_chart["difficulty"]
             self.songtitle = self.random_chart["songName"]
 
@@ -126,10 +149,9 @@ class RandomizerButton(QObject):
                             int_n_songs, self.filterlen)
                         return
 
-                    # imageurl = self.random_chart["song"]["imagePath"]
                     imageurl = self.random_chart["imageUrl"]
                     if not offlinemode:
-                        download_image(self.random_chart, output_dir)
+                        download_image(self.random_chart, SONGS_DIR)
 
                     self.songcardname = Path(imageurl).name
                     self.songlevel = self.random_chart["difficulty"]
@@ -158,15 +180,24 @@ class RandomizerButton(QObject):
     def randomize_button_predefined(self, json_all, allchartsinfo, n_songs, offlinemode=True):
 
         self.allcharts.clear()
-        print(n_songs)
+
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
+        token = APPCACHE_DIR / "token.txt"
 
         if not offlinemode:
-            APPCACHE_DIR = Path("api/appcache/songcards")
+            # APPCACHE_DIR = Path("api/appcache/songcards")
             output_dir = APPCACHE_DIR
-            output_dir.parent.mkdir(parents=True, exist_ok=True)
-            output_cache = Path(f"api/appcache/dump_all_v2.json")
-            if not output_cache:
-                # get_charts_info()
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_cache = Path(output_dir / "dump_all_v2.json")
+            if not output_cache.exists():
+                if not token.exists():
+                    self.error_notoken.emit()
+                    return
+
                 get_charts_info_v2(mix="phoenix2")
 
         for chart in allchartsinfo:
@@ -220,9 +251,9 @@ class RandomizerButton(QObject):
                     return
 
                 imageurl = self.random_chart["imageUrl"]
-                # imageurl = self.random_chart["song"]["imagePath"]
+
                 if not offlinemode:
-                    download_image(self.random_chart, output_dir)
+                    download_image(self.random_chart, SONGS_DIR)
 
                 self.songcardname = Path(imageurl).name
                 self.songlevel = self.random_chart["difficulty"]
@@ -245,10 +276,14 @@ class RandomizerButton(QObject):
 
     def assign_chart_to_image(self):
         updated_charts = []
+        LOCAL_APP_DATA = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+
+        APPCACHE_DIR = LOCAL_APP_DATA / "PIURando" / "appcache"
+        SONGS_DIR = APPCACHE_DIR / "songcards"
 
         for chart in self.allcharts:
-            path_to_random = Path(
-                f"api/appcache/songcards") / chart["image"]
+            path_to_random = Path(SONGS_DIR / chart["image"])
 
             if "C" in chart["level"]:
                 final_label = f"Co-Op x {chart["level"][-1]}"
