@@ -899,7 +899,7 @@ class MainWindow(QMainWindow):
         self.wg_remix_checkbox.setEnabled(True)
         self.wg_fullsong_checkbox.setEnabled(True)
         self.wg_shortcut_checkbox.setEnabled(True)
-        self.wg_checkbox_intervals.setEnabled(False)
+        self.wg_checkbox_intervals.setEnabled(True)
 
         for row in self.predefined_rows:
             row["active"].setEnabled(False)
