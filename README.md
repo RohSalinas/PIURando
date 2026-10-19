@@ -18,7 +18,7 @@ If you are not familiar with GitHub, you can click here to [download the latest 
 
 1) The only thing you require to run the app the first time is your PIUScores API key. To get it, login and go to https://piuscores.arroweclip.se/Account and access the "API" tab. There you will find your token. Copy it.
 2) At PIURando first start up, you will be asked to download the cache. If you decide to do it, the API key window will pop up. Copy your API key and press "Save API key".
-3) If you input your API key correctly, then the metadata and song cards will start downloading. Once its done, PIURando is ready to be used! You don't need to input the key every time, just this one.
+3) If you input your API key correctly, then the metadata and song cards will start downloading. Once its done, PIURando is ready to be used! You don't need to input the key every time, or internet access again until you want to update/reload the cache (e.g. after a PIU Phoenix 2 new update).
 
 **Additional information:**
 - You can always clear or change your API key in User -> API key configuration
